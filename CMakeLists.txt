@@ -22,8 +22,8 @@ add_executable(RayTracer13
 	output/ppm/PPMImageWriter.cpp
 
 	sampling/Ray.h
-	sampling/Raygen.h
 	sampling/Camera.h
+	sampling/Camera.cpp
 
 	calc/TypeDefs.h
 )

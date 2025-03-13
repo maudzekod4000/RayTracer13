@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdint>
 
 #include "output/ppm/PPMImageMeta.h"
 #include "output/ppm/PPMImage.h"
@@ -6,24 +7,25 @@
 #include "output/ppm/PPMImageFileWriter.h"
 #include "Camera.h"
 #include "TypeDefs.h"
-#include "Raygen.h"
+
+#define WIDTH 640
+#define HEIGHT 480
+#define MAX_COLOR 255
 
 int main() {
-    int width = 1920;
-    int height = 1640;
-    PPMImageMeta metadata(width, height, 255);
+    const uint16_t width = WIDTH;
+    const uint16_t height = HEIGHT;
+    PPMImageMeta metadata(width, height, MAX_COLOR);
     PPMImage image(metadata);
-    Camera camera(Vec3(0.0f), glm::identity<Mat3>());
-    Raygen rayGen(width, height, camera, -1.0f);
+    Camera camera(Vec3(0.0f), glm::identity<Mat3>(), width, height, -1.0);
 
-    Vec3 forward(0.0, 0.0, -1.0);
-    camera.pan(20);
+    const Vec3 forward(0.0, 0.0, -1.0);
 
-    for (size_t i = 0; i < width; i++) {
-        for (size_t j = 0; j < height; j++) {
-            Ray r = rayGen.gen(i, j);
-            float angle = glm::abs(glm::dot(forward, r.dir));
-            image.writePixel(j, i, PPMColor(angle * 255, angle * 255, angle * 255));
+    for (uint16_t i = 0; i < width; i++) {
+        for (uint16_t j = 0; j < height; j++) {
+            const Ray r = camera.generateRay(i, j);
+            const float angle = glm::abs(glm::dot(forward, r.dir));
+            image.writePixel(j, i, PPMColor(angle * MAX_COLOR, angle * MAX_COLOR, angle * MAX_COLOR));
         }
     }
 

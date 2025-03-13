@@ -4,9 +4,11 @@
 #include <cstdint>
 #include <glm/ext/matrix_transform.hpp>
 #include "TypeDefs.h"
+#include "Ray.h"
 
 struct Camera {
-  inline Camera(const Vec3& pos, const Mat3& matrix): pos(pos), transformationMatrix(Mat4(matrix)) {}
+    Camera(const Vec3& pos, const Mat3& matrix, uint32_t sensorWidth,
+        uint32_t sensorHeight, float focalDistance);
 
   /*
   * positive degrees are for left pan. Rotating around the Y vector because we are Y-up.
@@ -50,8 +52,16 @@ struct Camera {
     return transformationMatrix * glm::vec4(vec, 1.0f);
   }
 
+  Ray generateRay(float x, float y);
+
+private:
+
   Vec3 pos;
   glm::mat4 transformationMatrix;
+  int32_t sensorWidth;
+  int32_t sensorHeight;
+  float aspectRatio;
+  float focalDist;
 };
 
 #endif // !CAMERA_H
