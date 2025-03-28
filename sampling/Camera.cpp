@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-Camera::Camera(const Vec3& pos, const Mat3& matrix, uint32_t sensorWidth, uint32_t sensorHeight, float focalDistance)
+Camera::Camera(const Vec3& pos, const Mat3& matrix, uint16_t sensorWidth, uint16_t sensorHeight, float focalDistance)
     : pos(pos),
     transformationMatrix(Mat4(matrix)),
     sensorWidth(sensorWidth),
@@ -10,7 +10,7 @@ Camera::Camera(const Vec3& pos, const Mat3& matrix, uint32_t sensorWidth, uint32
 {
 }
 
-Ray Camera::generateRay(float x, float y)
+Ray Camera::generateRay(float x, float y) const
 {
     /* Sample the pixel at its center */
     x += 0.5f;

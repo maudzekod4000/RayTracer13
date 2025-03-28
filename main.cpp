@@ -8,14 +8,14 @@
 #include "Camera.h"
 #include "TypeDefs.h"
 
-#define WIDTH 640
-#define HEIGHT 480
-#define MAX_COLOR 255
+constexpr uint16_t WIDTH = 640;
+constexpr uint16_t HEIGHT = 480;
+constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
     const uint16_t width = WIDTH;
     const uint16_t height = HEIGHT;
-    PPMImageMeta metadata(width, height, MAX_COLOR);
+    const PPMImageMeta metadata(width, height, MAX_COLOR);
     PPMImage image(metadata);
     Camera camera(Vec3(0.0f), glm::identity<Mat3>(), width, height, -1.0);
 
