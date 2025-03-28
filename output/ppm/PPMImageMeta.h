@@ -23,7 +23,6 @@ public:
 	/// <param name="os">Output stream to write to.</param>
 	void writeHeaders(std::ostream& os) const;
 private:
-	const char* colorFormat;
 	const uint16_t imgWidth;
 	const uint16_t imgHeight;
 	const uint16_t maxColor;

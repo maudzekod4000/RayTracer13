@@ -18,7 +18,7 @@ public:
 
   void writePixel(int32_t row, int32_t col, const PPMColor& color);
 protected:
-  std::vector<std::vector<PPMColor>> image;
+  std::vector<std::vector<PPMColor>> buffer;
   const PPMImageMeta& metadata;
 };
 
