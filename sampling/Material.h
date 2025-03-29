@@ -2,7 +2,7 @@
 #define MATERIAL_H
 
 #include <string>
-#include <utils/TypeDefs.h>
+#include "TypeDefs.h"
 
 enum class MaterialType {
   DIFFUSE,

@@ -4,8 +4,6 @@
 #include "TypeDefs.h"
 
 #include "Vertex.h"
-#include "IntersectionData.h"
-#include <Camera.cpp>
 
 struct Ray;
 struct IntersectionData;

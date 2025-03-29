@@ -4,7 +4,7 @@
 #include "IntersectionData.h"
 
 // Calculates the area of the triangle defined by the three point arguments.
-static float area(const Vec3& a, const Vec3& b, const Vec3& c)
+static float calculateArea(const Vec3& a, const Vec3& b, const Vec3& c)
 {
 	return glm::length(glm::cross(b - a, c - a)) / 2.0f;
 }
@@ -17,9 +17,10 @@ Triangle::Triangle(const Vertex& a, const Vertex& b, const Vertex& c):
 
 float Triangle::area() const
 {
-    return area(a.pos, b.pos, c.pos);
+    return calculateArea(a.pos, b.pos, c.pos);
 }
 
+// TODO: Maybe this should return intersectiondata?
 bool Triangle::intersect(const Ray& ray, IntersectionData& intersectionData) const
 {
 	const float rayProj = glm::dot(ray.dir, n);
