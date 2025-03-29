@@ -9,7 +9,7 @@ class PPMImageWriter {
 public:
   PPMImageWriter(const PPMImage& image);
 
-  void write(std::ostream& output) const;
+	void write(std::ostream& output) const;
 private:
   const PPMImage& image;
 };

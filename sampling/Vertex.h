@@ -1,7 +1,7 @@
 #ifndef VERTEX_H
 #define VERTEX_H
 
-#include <utils/TypeDefs.h>
+#include "TypeDefs.h"
 
 struct Vertex {
   Vec3 pos{};

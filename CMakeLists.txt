@@ -24,6 +24,11 @@ add_executable(RayTracer13
 	sampling/Ray.h
 	sampling/Camera.h
 	sampling/Camera.cpp
+	sampling/Vertex.h
+	sampling/Triangle.h
+	sampling/Triangle.cpp
+	sampling/Ray.h
+	sampling/IntersectionData.h
 
 	calc/TypeDefs.h
 )
