@@ -59,6 +59,8 @@ private:
   uint16_t sensorHeight;
   float aspectRatio;
   float focalDist;
+  float halfSensorW;
+  float halfSensorH;
 };
 
 #endif // !CAMERA_H

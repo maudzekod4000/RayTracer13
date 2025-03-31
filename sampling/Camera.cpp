@@ -6,7 +6,9 @@ Camera::Camera(const Vec3& pos, const Mat3& matrix, uint16_t sensorWidth, uint16
     sensorWidth(sensorWidth),
     sensorHeight(sensorHeight),
     aspectRatio(float(sensorWidth) / sensorHeight),
-    focalDist(focalDistance)
+    focalDist(focalDistance),
+    halfSensorW(sensorWidth / 2.0f),
+    halfSensorH(sensorHeight / 2.0f)
 {
 }
 
@@ -17,12 +19,12 @@ Ray Camera::generateRay(float x, float y) const
     y += 0.5f;
 
     /* Transform to NDC: 0.0 - 1.0 */
-    x /= sensorWidth;
-    y /= sensorHeight;
+    x /= halfSensorW;
+    y /= halfSensorH;
 
     /* To Screen space: bottom left is [-1;-1] and top right is [1;1] and 0,0 is at the center of the screen */
-    x = (x * 2.0f) - 1.0f;
-    y = 1.0f - (y * 2.0f);
+    x = x - 1.0f;
+    y = 1.0f - y;
 
     /* Consider the aspect ratio, because pixels might not be square and we added 0.5 to both components. */
     x *= aspectRatio;
