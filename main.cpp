@@ -11,8 +11,8 @@
 #include "Triangle.h"
 #include "IntersectionData.h"
 
-constexpr uint16_t WIDTH = 640;
-constexpr uint16_t HEIGHT = 480;
+constexpr uint16_t WIDTH = 1920;
+constexpr uint16_t HEIGHT = 1080;
 constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
@@ -31,6 +31,8 @@ int main() {
 
     const Triangle tr(a, b, c);
 
+    std::cout << "Begin rendering..." << std::endl;
+
     for (uint16_t i = 0; i < width; i++) {
         for (uint16_t j = 0; j < height; j++) {
             const Ray r = camera.generateRay(i, j);
@@ -45,6 +47,9 @@ int main() {
         }
     }
 
+    std::cout << "Rendering done..." << std::endl;
+
+    std::cout << "Writing image..." << std::endl;
     PPMImageFileWriter writer(image, "rt.ppm");
     writer.write();
     return 0;

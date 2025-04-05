@@ -11,7 +11,7 @@ struct IntersectionData;
 struct Triangle {
 	Triangle(const Vertex& a, const Vertex& b, const Vertex& c);
 
-	/// Calculates the triangle's area. 
+	/// Calculates the triangle's area.
 	float area() const;
 
 	/// Checks for intersection between the triangle and the ray.

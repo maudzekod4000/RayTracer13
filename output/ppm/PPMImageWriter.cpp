@@ -10,7 +10,6 @@
 
 PPMImageWriter::PPMImageWriter(const PPMImage& image): image(image) {}
 
-__declspec(safebuffers)
 void PPMImageWriter::write(std::ostream& output) const
 {
     assert(!image.buffer.empty());

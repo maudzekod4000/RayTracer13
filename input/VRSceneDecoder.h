@@ -1,0 +1,6 @@
+#ifndef VRSCENE_DECODER_H
+#define VRSCENE_DECODER_H
+
+
+
+#endif // !VRSCENE_DECODER_H
