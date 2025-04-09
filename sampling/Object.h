@@ -3,11 +3,11 @@
 
 #include <vector>
 #include "Triangle.h"
-#include "Material.h"
+//#include "Material.h"
 
 struct Object {
   std::vector<Triangle> triangles;
-  Material mat;
+  //Material mat;
 };
 
 #endif // !OBJECT_H

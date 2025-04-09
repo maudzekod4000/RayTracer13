@@ -8,6 +8,7 @@
 
 constexpr char missingInvalidKeyFmt[] = "Missing or invalid type for key '{}'";
 constexpr char sizeMismatchFmt[] = "Unexpected element count of {} when {} is required for key '{}'";
+constexpr char invalidValueInArrayFmt[] = "Invalid value '{}' in '{}'";
 constexpr char kSettings[] = "settings";
 constexpr char kBgColor[] = "background_color";
 constexpr char kImage[] = "image";
@@ -16,6 +17,9 @@ constexpr char kHeight[] = "height";
 constexpr char kCamera[] = "camera";
 constexpr char kMatrix[] = "matrix";
 constexpr char kPos[] = "position";
+constexpr char kObjects[] = "objects";
+constexpr char kVertices[] = "vertices";
+constexpr char kTriangles[] = "triangles";
 
 std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, size_t len)
 {
@@ -103,5 +107,47 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
   constexpr int posSize = 3;
   if (pos.Size() != posSize) {
     return std::unexpected(std::format(sizeMismatchFmt, pos.Size(), posSize, kPos));
+  }
+
+  const auto& objects = d[kObjects];
+
+  if (!objects.IsArray()) {
+    return std::unexpected(std::format(missingInvalidKeyFmt, kObjects));
+  }
+
+  for (const auto& object : objects.GetArray()) {
+    if (!object.IsObject()) {
+      return std::unexpected(std::format(missingInvalidKeyFmt, kObjects));
+    }
+
+    const auto& vertices = object[kVertices];
+
+    if (vertices.IsArray() || vertices.Size() == 0 || vertices.Size() % 3 != 0) {
+      return std::unexpected(std::format(missingInvalidKeyFmt, kVertices));
+    }
+
+    const auto& triangles = object[kTriangles];
+
+    if (triangles.IsArray() || triangles.Size() == 0 || triangles.Size() % 3 != 0) {
+      return std::unexpected(std::format(missingInvalidKeyFmt, kTriangles));
+    }
+
+    for (size_t i = 0; i < triangles.Size(); i += 3) {
+      const auto& v1Idx = triangles[i];
+
+      if (!v1Idx.IsNumber() || v1Idx.GetInt() < 0 || v1Idx.GetInt() >= vertices.Size()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, v1Idx.GetString(), kTriangles));
+      }
+
+      const auto& vertex1x = vertices[v1Idx.GetInt()];
+
+      if (!vertex1x.IsFloat()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex1x.GetString(), kVertices));
+      }
+
+
+
+      Vec3 vertex1Pos{};
+    }
   }
 }

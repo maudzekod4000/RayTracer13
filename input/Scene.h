@@ -4,7 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <iostream>
-#include "Triangle.h"
+#include "Object.h"
 #include "TypeDefs.h"
 
 class CameraSettings final {
@@ -52,11 +52,12 @@ private:
 
 class Scene {
 public:
+	// TODO: Maybe i can skip defining these.
 	Scene(std::vector<Triangle>&&);
 
 	Scene(Scene&&) = default;
 private:
-	std::vector<Triangle> triangles;
+	std::vector<Object> triangles;
 };
 
 #endif // !SCENE_H

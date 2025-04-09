@@ -29,6 +29,7 @@ add_executable(RayTracer13
 	sampling/Triangle.cpp
 	sampling/Ray.h
 	sampling/IntersectionData.h
+	sampling/Object.h
 
 	input/VRSceneDecoder.h
 	input/VRSceneDecoder.cpp
