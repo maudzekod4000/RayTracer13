@@ -5,7 +5,11 @@
 #include "Triangle.h"
 //#include "Material.h"
 
-struct Object {
+class Object{
+public:
+  Object(std::vector<Triangle>&&) noexcept;
+private:
+
   std::vector<Triangle> triangles;
   //Material mat;
 };

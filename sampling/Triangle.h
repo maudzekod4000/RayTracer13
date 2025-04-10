@@ -9,7 +9,7 @@ struct Ray;
 struct IntersectionData;
 
 struct Triangle {
-	Triangle(const Vertex& a, const Vertex& b, const Vertex& c);
+	Triangle(Vertex&& a, Vertex&& b, Vertex&& c);
 
 	/// Calculates the triangle's area.
 	float area() const;

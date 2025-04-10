@@ -52,12 +52,15 @@ private:
 
 class Scene {
 public:
-	// TODO: Maybe i can skip defining these.
-	Scene(std::vector<Triangle>&&);
+	Scene(CameraSettings&&, ImageSettings&&, Settings&&, std::vector<Object>&&);
 
+	// TODO: Think about the class design here. Which method we need and which have to be deleted.
 	Scene(Scene&&) = default;
 private:
-	std::vector<Object> triangles;
+	CameraSettings cameraSettings;
+	ImageSettings imageSettings;
+	Settings settings;
+	std::vector<Object> objects;
 };
 
 #endif // !SCENE_H

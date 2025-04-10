@@ -1,7 +1,7 @@
 #include "Scene.h"
 
-Scene::Scene(std::vector<Triangle>&& t):
-	triangles(std::move(t))
+Scene::Scene(CameraSettings&& cs, ImageSettings&& is, Settings&& s, std::vector<Object>&& o):
+	cameraSettings(std::move(cs)), imageSettings(std::move(is)), settings(std::move(s)), objects(std::move(o))
 {
 }
 

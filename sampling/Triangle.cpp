@@ -9,8 +9,8 @@ static float calculateArea(const Vec3& a, const Vec3& b, const Vec3& c)
 	return glm::length(glm::cross(b - a, c - a)) / 2.0f;
 }
 
-Triangle::Triangle(const Vertex& a, const Vertex& b, const Vertex& c):
-    a(a), b(b), c(c),
+Triangle::Triangle(Vertex&& a, Vertex&& b, Vertex&& c):
+    a(std::move(a)), b(std::move(b)), c(std::move(c)),
     n(glm::normalize(glm::cross(b.pos - a.pos, c.pos - a.pos))),
     objIdx(-1)
 {}

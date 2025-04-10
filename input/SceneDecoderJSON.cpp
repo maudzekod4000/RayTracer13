@@ -66,20 +66,16 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
   }
 
   const auto& imageWidth = image[kWidth];
-
-  if (!imageWidth.IsNumber()) {
+  constexpr int absurdlyBigImageSize = 10000;
+  if (!imageWidth.IsNumber() || imageWidth.GetInt() < 1 || imageWidth.GetInt() > absurdlyBigImageSize) {
     return std::unexpected(std::format(missingInvalidKeyFmt, std::format("{}->{}", kImage, kWidth)));
   }
 
-  // TODO: the width is ready
-
   const auto& imageHeight = image[kHeight];
 
-  if (!imageHeight.IsNumber()) {
+  if (!imageHeight.IsNumber() || imageHeight.GetInt() < 1 || imageHeight.GetInt() > absurdlyBigImageSize) {
     return std::unexpected(std::format(missingInvalidKeyFmt, std::format("{}->{}", kImage, kHeight)));
   }
-
-  // TODO: the height is ready too
 
   const auto& camera = d[kCamera];
 
@@ -98,6 +94,24 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
     return std::unexpected(std::format(sizeMismatchFmt, matrix.Size(), matrixSize, kMatrix));
   }
 
+  for (size_t i = 0; i < matrixSize; i++) {
+    if (!matrix[i].IsFloat()) {
+      return std::unexpected(std::format(missingInvalidKeyFmt, kMatrix));
+    }
+  }
+
+  Mat3 cameraTm(
+    matrix[0].GetFloat(),
+    matrix[1].GetFloat(),
+    matrix[2].GetFloat(),
+    matrix[3].GetFloat(),
+    matrix[4].GetFloat(),
+    matrix[5].GetFloat(),
+    matrix[6].GetFloat(),
+    matrix[7].GetFloat(),
+    matrix[8].GetFloat()
+  );
+
   const auto& pos = camera[kPos];
 
   if (!pos.IsArray()) {
@@ -109,11 +123,22 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
     return std::unexpected(std::format(sizeMismatchFmt, pos.Size(), posSize, kPos));
   }
 
+  for (size_t i = 0; i < posSize; i++) {
+    if (!pos[i].IsFloat()) {
+      return std::unexpected(std::format(missingInvalidKeyFmt, kPos));
+    }
+  }
+
+  Vec3 cameraPos(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+
   const auto& objects = d[kObjects];
 
   if (!objects.IsArray()) {
     return std::unexpected(std::format(missingInvalidKeyFmt, kObjects));
   }
+
+  std::vector<Object> sceneObjects;
+  sceneObjects.reserve(objects.Size());
 
   for (const auto& object : objects.GetArray()) {
     if (!object.IsObject()) {
@@ -132,22 +157,94 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
       return std::unexpected(std::format(missingInvalidKeyFmt, kTriangles));
     }
 
-    for (size_t i = 0; i < triangles.Size(); i += 3) {
-      const auto& v1Idx = triangles[i];
+    std::vector<Triangle> sceneTriangles;
+    sceneTriangles.reserve(triangles.Size() / 3);
 
-      if (!v1Idx.IsNumber() || v1Idx.GetInt() < 0 || v1Idx.GetInt() >= vertices.Size()) {
-        return std::unexpected(std::format(invalidValueInArrayFmt, v1Idx.GetString(), kTriangles));
+    for (size_t i = 0; i < triangles.Size(); i += 3) {
+      const auto& vertex1Idx = triangles[i];
+
+      if (!vertex1Idx.IsNumber() || vertex1Idx.GetInt() < 0 || vertex1Idx.GetInt() >= vertices.Size()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex1Idx.GetString(), kTriangles));
       }
 
-      const auto& vertex1x = vertices[v1Idx.GetInt()];
+      const auto& vertex1x = vertices[vertex1Idx.GetInt()];
 
       if (!vertex1x.IsFloat()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex1x.GetString(), kVertices));
       }
 
+      const auto& vertex1y = vertices[vertex1Idx.GetInt() + 1];
 
+      if (!vertex1y.IsFloat()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex1y.GetString(), kVertices));
+      }
 
-      Vec3 vertex1Pos{};
+      const auto& vertex1z = vertices[vertex1Idx.GetInt() + 2];
+
+      if (!vertex1z.IsFloat()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex1z.GetString(), kVertices));
+      }
+
+      const Vec3 vertex1Pos{ vertex1x.GetFloat(), vertex1y.GetFloat(), vertex1z.GetFloat() };
+
+      const auto& vertex2Idx = triangles[i + 1];
+
+      if (!vertex2Idx.IsNumber() || vertex2Idx.GetInt() < 0 || vertex2Idx.GetInt() >= vertices.Size()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex2Idx.GetString(), kTriangles));
+      }
+
+      const auto& vertex2x = vertices[vertex2Idx.GetInt()];
+
+      if (!vertex2x.IsFloat()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex2x.GetString(), kVertices));
+      }
+
+      const auto& vertex2y = vertices[vertex2Idx.GetInt() + 1];
+
+      if (!vertex2y.IsFloat()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex2y.GetString(), kVertices));
+      }
+
+      const auto& vertex2z = vertices[vertex2Idx.GetInt() + 2];
+
+      if (!vertex2z.IsFloat()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex2z.GetString(), kVertices));
+      }
+
+      const Vec3 vertex2Pos{ vertex2x.GetFloat(), vertex2y.GetFloat(), vertex2z.GetFloat() };
+
+      const auto& vertex3Idx = triangles[i + 2];
+
+      if (!vertex3Idx.IsNumber() || vertex3Idx.GetInt() < 0 || vertex3Idx.GetInt() >= vertices.Size()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex3Idx.GetString(), kTriangles));
+      }
+
+      const auto& vertex3x = vertices[vertex3Idx.GetInt()];
+
+      if (!vertex3x.IsFloat()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex3x.GetString(), kVertices));
+      }
+
+      const auto& vertex3y = vertices[vertex3Idx.GetInt() + 1];
+
+      if (!vertex3y.IsFloat()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex3y.GetString(), kVertices));
+      }
+
+      const auto& vertex3z = vertices[vertex3Idx.GetInt() + 2];
+
+      if (!vertex3z.IsFloat()) {
+        return std::unexpected(std::format(invalidValueInArrayFmt, vertex3z.GetString(), kVertices));
+      }
+
+      const Vec3 vertex3Pos{ vertex3x.GetFloat(), vertex3y.GetFloat(), vertex3z.GetFloat() };
+
+      sceneTriangles.emplace_back(std::move(vertex1Pos), std::move(vertex2Pos), std::move(vertex3Pos));
     }
+
+    sceneObjects.emplace_back(std::move(sceneTriangles));
   }
+
+  CameraSettings camSettings(std::move(cameraTm), std::move(cameraPos));
+  ImageSettings imgSettings(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
 }
