@@ -1,5 +1,10 @@
 #include <iostream>
 #include <cstdint>
+#include <filesystem>
+#include <string>
+#include <fstream>
+#include <vector>
+#include <memory>
 
 #include "output/ppm/PPMImageMeta.h"
 #include "output/ppm/PPMImage.h"
@@ -10,6 +15,8 @@
 #include "Vertex.h"
 #include "Triangle.h"
 #include "IntersectionData.h"
+#include "input/VRSceneDecoder.h"
+#include "input/SceneDecoderJSON.h"
 
 constexpr uint16_t WIDTH = 1920;
 constexpr uint16_t HEIGHT = 1080;
@@ -24,12 +31,45 @@ int main() {
 
     const Vec3 forward(0.0, 0.0, -1.0);
 
-    // create some sample triangle
-    const Vertex a{ Vec3(-0.5f, 0.5f, -2.0f), Vec3() };
-    const Vertex b{ Vec3(-0.0f, -0.5f, -2.0f), Vec3() };
-    const Vertex c{ Vec3(0.5f, 0.5f, -2.0f), Vec3() };
+    // Read the scene file
+    const std::filesystem::path filePath = "../scenes/basic/scene0.crtscene";
+    std::filesystem::path::string_type fullPath = std::filesystem::absolute(filePath);
+    if (!std::filesystem::exists(filePath)) {
+        std::cerr << "File not found. Exiting..." << std::endl;
+        return 1;
+    }
 
-    const Triangle tr(a, b, c);
+    std::ifstream sceneFile(filePath);
+
+    if (!sceneFile) {
+        std::cerr << "Failed to open file: " << filePath << std::endl;
+        return 1;
+    }
+
+    sceneFile.seekg(0, std::ios::end);
+    size_t fileSize = sceneFile.tellg();
+    sceneFile.seekg(0, std::ios::beg);
+
+    std::vector<char> buff(fileSize);
+
+    sceneFile.read(buff.data(), fileSize);
+
+    std::unique_ptr<SceneDecoder> decoder(new SceneDecoderJSON);
+
+    auto expectedScene = decoder->decode((uint8_t*)(buff.data()), fileSize);
+
+    if (expectedScene.has_value() == false) {
+        std::cerr << expectedScene.error() << std::endl;
+        return 1;
+    }
+    
+
+    // create some sample triangle
+    Vertex a(Vec3(-0.5f, 0.5f, -2.0f));
+    Vertex b(Vec3(-0.0f, -0.5f, -2.0f));
+    Vertex c(Vec3(0.5f, 0.5f, -2.0f));
+
+    Triangle tr(std::move(a), std::move(b), std::move(c));
 
     std::cout << "Begin rendering..." << std::endl;
 

@@ -6,12 +6,14 @@
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 
+#include "Vertex.h"
+
 constexpr char missingInvalidKeyFmt[] = "Missing or invalid type for key '{}'";
 constexpr char sizeMismatchFmt[] = "Unexpected element count of {} when {} is required for key '{}'";
 constexpr char invalidValueInArrayFmt[] = "Invalid value '{}' in '{}'";
 constexpr char kSettings[] = "settings";
 constexpr char kBgColor[] = "background_color";
-constexpr char kImage[] = "image";
+constexpr char kImage[] = "image_settings";
 constexpr char kWidth[] = "width";
 constexpr char kHeight[] = "height";
 constexpr char kCamera[] = "camera";
@@ -57,7 +59,7 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
     return std::unexpected(std::format(sizeMismatchFmt, bgColor.Size(), bgColorSize, kBgColor));
   }
 
-  // TODO: set in Scene
+  Vec3 backgroundColor(bgColor[0].GetFloat(), bgColor[1].GetFloat(), bgColor[2].GetFloat());
 
   const auto& image = settings[kImage];
 
@@ -95,7 +97,7 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
   }
 
   for (size_t i = 0; i < matrixSize; i++) {
-    if (!matrix[i].IsFloat()) {
+    if (!matrix[i].IsNumber()) {
       return std::unexpected(std::format(missingInvalidKeyFmt, kMatrix));
     }
   }
@@ -124,7 +126,7 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
   }
 
   for (size_t i = 0; i < posSize; i++) {
-    if (!pos[i].IsFloat()) {
+    if (!pos[i].IsNumber()) {
       return std::unexpected(std::format(missingInvalidKeyFmt, kPos));
     }
   }
@@ -147,13 +149,13 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
 
     const auto& vertices = object[kVertices];
 
-    if (vertices.IsArray() || vertices.Size() == 0 || vertices.Size() % 3 != 0) {
+    if (!vertices.IsArray() || vertices.Size() == 0 || vertices.Size() % 3 != 0) {
       return std::unexpected(std::format(missingInvalidKeyFmt, kVertices));
     }
 
     const auto& triangles = object[kTriangles];
 
-    if (triangles.IsArray() || triangles.Size() == 0 || triangles.Size() % 3 != 0) {
+    if (!triangles.IsArray() || triangles.Size() == 0 || triangles.Size() % 3 != 0) {
       return std::unexpected(std::format(missingInvalidKeyFmt, kTriangles));
     }
 
@@ -169,23 +171,23 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
 
       const auto& vertex1x = vertices[vertex1Idx.GetInt()];
 
-      if (!vertex1x.IsFloat()) {
+      if (!vertex1x.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex1x.GetString(), kVertices));
       }
 
       const auto& vertex1y = vertices[vertex1Idx.GetInt() + 1];
 
-      if (!vertex1y.IsFloat()) {
+      if (!vertex1y.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex1y.GetString(), kVertices));
       }
 
       const auto& vertex1z = vertices[vertex1Idx.GetInt() + 2];
 
-      if (!vertex1z.IsFloat()) {
+      if (!vertex1z.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex1z.GetString(), kVertices));
       }
 
-      const Vec3 vertex1Pos{ vertex1x.GetFloat(), vertex1y.GetFloat(), vertex1z.GetFloat() };
+      Vec3 vertex1Pos{ vertex1x.GetFloat(), vertex1y.GetFloat(), vertex1z.GetFloat() };
 
       const auto& vertex2Idx = triangles[i + 1];
 
@@ -195,23 +197,23 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
 
       const auto& vertex2x = vertices[vertex2Idx.GetInt()];
 
-      if (!vertex2x.IsFloat()) {
+      if (!vertex2x.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex2x.GetString(), kVertices));
       }
 
       const auto& vertex2y = vertices[vertex2Idx.GetInt() + 1];
 
-      if (!vertex2y.IsFloat()) {
+      if (!vertex2y.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex2y.GetString(), kVertices));
       }
 
       const auto& vertex2z = vertices[vertex2Idx.GetInt() + 2];
 
-      if (!vertex2z.IsFloat()) {
+      if (!vertex2z.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex2z.GetString(), kVertices));
       }
 
-      const Vec3 vertex2Pos{ vertex2x.GetFloat(), vertex2y.GetFloat(), vertex2z.GetFloat() };
+      Vec3 vertex2Pos{ vertex2x.GetFloat(), vertex2y.GetFloat(), vertex2z.GetFloat() };
 
       const auto& vertex3Idx = triangles[i + 2];
 
@@ -221,30 +223,33 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
 
       const auto& vertex3x = vertices[vertex3Idx.GetInt()];
 
-      if (!vertex3x.IsFloat()) {
+      if (!vertex3x.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex3x.GetString(), kVertices));
       }
 
       const auto& vertex3y = vertices[vertex3Idx.GetInt() + 1];
 
-      if (!vertex3y.IsFloat()) {
+      if (!vertex3y.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex3y.GetString(), kVertices));
       }
 
       const auto& vertex3z = vertices[vertex3Idx.GetInt() + 2];
 
-      if (!vertex3z.IsFloat()) {
+      if (!vertex3z.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex3z.GetString(), kVertices));
       }
 
-      const Vec3 vertex3Pos{ vertex3x.GetFloat(), vertex3y.GetFloat(), vertex3z.GetFloat() };
+      Vec3 vertex3Pos{ vertex3x.GetFloat(), vertex3y.GetFloat(), vertex3z.GetFloat() };
 
-      sceneTriangles.emplace_back(std::move(vertex1Pos), std::move(vertex2Pos), std::move(vertex3Pos));
+      sceneTriangles.emplace_back(Vertex(vertex1Pos), Vertex(vertex2Pos), Vertex(vertex3Pos));
     }
 
     sceneObjects.emplace_back(std::move(sceneTriangles));
   }
 
-  CameraSettings camSettings(std::move(cameraTm), std::move(cameraPos));
-  ImageSettings imgSettings(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
+  CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
+  ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
+  Settings s(std::move(backgroundColor), std::move(is));
+
+  return Scene(std::move(cs), std::move(s), std::move(sceneObjects));
 }

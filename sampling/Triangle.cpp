@@ -11,13 +11,13 @@ static float calculateArea(const Vec3& a, const Vec3& b, const Vec3& c)
 
 Triangle::Triangle(Vertex&& a, Vertex&& b, Vertex&& c):
     a(std::move(a)), b(std::move(b)), c(std::move(c)),
-    n(glm::normalize(glm::cross(b.pos - a.pos, c.pos - a.pos))),
+    n(glm::normalize(glm::cross(b.pos() - a.pos(), c.pos() - a.pos()))),
     objIdx(-1)
 {}
 
 float Triangle::area() const
 {
-    return calculateArea(a.pos, b.pos, c.pos);
+    return calculateArea(a.pos(), b.pos(), c.pos());
 }
 
 bool Triangle::intersect(const Ray& ray, IntersectionData& intersectionData) const
@@ -25,7 +25,7 @@ bool Triangle::intersect(const Ray& ray, IntersectionData& intersectionData) con
 	const float rayProj = glm::dot(ray.dir, n);
 	// The projection of the ray direction onto the normal of the triangle
 	// is the length from the ray origin to the traingle plane.
-	const float t = glm::dot(this->a.pos - ray.origin, n) / rayProj;
+	const float t = glm::dot(this->a.pos() - ray.origin, n) / rayProj;
 
 	if (t > intersectionData.t || t <= 0.0f) {
 		return false;
@@ -38,9 +38,9 @@ bool Triangle::intersect(const Ray& ray, IntersectionData& intersectionData) con
 	// We want them to blend a bit to avoid jagged edges.
 	constexpr float e = -0.000001;
 
-	if (dot(n, cross(b.pos - a.pos, p - a.pos)) <= e ||
-		dot(n, cross(c.pos - b.pos, p - b.pos)) <= e ||
-		dot(n, cross(a.pos - c.pos, p - c.pos)) <= e) {
+	if (dot(n, cross(b.pos() - a.pos(), p - a.pos())) <= e ||
+		dot(n, cross(c.pos() - b.pos(), p - b.pos())) <= e ||
+		dot(n, cross(a.pos() - c.pos(), p - c.pos())) <= e) {
 		return false;
 	}
 

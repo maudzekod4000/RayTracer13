@@ -1,11 +1,11 @@
 #include "Scene.h"
 
-Scene::Scene(CameraSettings&& cs, ImageSettings&& is, Settings&& s, std::vector<Object>&& o):
-	cameraSettings(std::move(cs)), imageSettings(std::move(is)), settings(std::move(s)), objects(std::move(o))
+Scene::Scene(CameraSettings&& cs, Settings&& s, std::vector<Object>&& o):
+	cameraSettings(std::move(cs)), settings(std::move(s)), objects(std::move(o))
 {
 }
 
-ImageSettings::ImageSettings(uint16_t w, uint16_t h):
+ImageSettings::ImageSettings(uint16_t w, uint16_t h) noexcept:
 	width(w), height(h)
 {
 }

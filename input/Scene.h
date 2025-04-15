@@ -52,13 +52,12 @@ private:
 
 class Scene {
 public:
-	Scene(CameraSettings&&, ImageSettings&&, Settings&&, std::vector<Object>&&);
+	Scene(CameraSettings&&, Settings&&, std::vector<Object>&&);
 
 	// TODO: Think about the class design here. Which method we need and which have to be deleted.
 	Scene(Scene&&) = default;
 private:
 	CameraSettings cameraSettings;
-	ImageSettings imageSettings;
 	Settings settings;
 	std::vector<Object> objects;
 };
