@@ -41,6 +41,9 @@ add_executable(RayTracer13
 	input/SceneDecoderJSON.h
 	input/SceneDecoderJSON.cpp
 
+	input/FileReader.h
+	input/FileReader.cpp
+
 	calc/TypeDefs.h
 )
 

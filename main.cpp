@@ -56,10 +56,10 @@ int main() {
 
     std::unique_ptr<SceneDecoder> decoder(new SceneDecoderJSON);
 
-    auto expectedScene = decoder->decode((uint8_t*)(buff.data()), fileSize);
+    auto sceneExp = decoder->decode((uint8_t*)(buff.data()), fileSize);
 
-    if (expectedScene.has_value() == false) {
-        std::cerr << expectedScene.error() << std::endl;
+    if (sceneExp.has_value() == false) {
+        std::cerr << sceneExp.error() << std::endl;
         return 1;
     }
     
