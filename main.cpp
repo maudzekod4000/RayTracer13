@@ -17,6 +17,7 @@
 #include "IntersectionData.h"
 #include "input/VRSceneDecoder.h"
 #include "input/SceneDecoderJSON.h"
+#include "input/FileReader.h"
 
 constexpr uint16_t WIDTH = 1920;
 constexpr uint16_t HEIGHT = 1080;
@@ -33,30 +34,16 @@ int main() {
 
     // Read the scene file
     const std::filesystem::path filePath = "../scenes/basic/scene0.crtscene";
-    std::filesystem::path::string_type fullPath = std::filesystem::absolute(filePath);
-    if (!std::filesystem::exists(filePath)) {
-        std::cerr << "File not found. Exiting..." << std::endl;
+    std::expected<std::vector<char>, std::string> fileContentExp = FileReader::readFile(filePath);
+
+    if (fileContentExp.has_value() == false) {
+        std::cerr << fileContentExp.error() << std::endl;
         return 1;
     }
-
-    std::ifstream sceneFile(filePath);
-
-    if (!sceneFile) {
-        std::cerr << "Failed to open file: " << filePath << std::endl;
-        return 1;
-    }
-
-    sceneFile.seekg(0, std::ios::end);
-    size_t fileSize = sceneFile.tellg();
-    sceneFile.seekg(0, std::ios::beg);
-
-    std::vector<char> buff(fileSize);
-
-    sceneFile.read(buff.data(), fileSize);
 
     std::unique_ptr<SceneDecoder> decoder(new SceneDecoderJSON);
 
-    auto sceneExp = decoder->decode((uint8_t*)(buff.data()), fileSize);
+    auto sceneExp = decoder->decode((uint8_t*)(fileContentExp.value().data()), fileContentExp.value().size());
 
     if (sceneExp.has_value() == false) {
         std::cerr << sceneExp.error() << std::endl;

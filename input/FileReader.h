@@ -4,11 +4,12 @@
 #include <filesystem>
 #include <expected>
 #include <string>
+#include <vector>
 
 class FileReader final {
 public:
-	FileReader() = delete;
 	static std::expected<std::vector<char>, std::string> readFile(const std::filesystem::path& filePath) noexcept;
+	FileReader() = delete;
 };
 
 #endif // !FILE_READER_H
