@@ -19,6 +19,9 @@
 #include "input/SceneDecoderJSON.h"
 #include "input/FileReader.h"
 #include "input/Scene.h"
+#include "input/CameraSettings.h"
+#include "input/ImageSettings.h"
+#include "input/Settings.h"
 
 constexpr uint16_t MAX_COLOR = 255;
 
@@ -43,11 +46,13 @@ int main() {
 
     const Scene& scene = sceneExp.value();
     const ImageSettings& imgSettings = scene.getSettings().getImgSettings();
-    const CameraSettings& camSettings = scene.getSettings().
+    const CameraSettings& camSettings = scene.getSettings().getCamSettings();
+    const uint16_t width = imgSettings.getWidth();
+    const uint16_t height = imgSettings.getHeight();
     
-    const PPMImageMeta metadata(imgSettings.getWidth(), imgSettings.getHeight(), MAX_COLOR);
+    const PPMImageMeta metadata(width, height, MAX_COLOR);
     PPMImage image(metadata);
-    Camera camera(Vec3(0.0f), glm::identity<Mat3>(), imgSettings.getWidth(), imgSettings.getHeight(), -1.0);
+    Camera camera(Vec3(0.0f), glm::identity<Mat3>(), width, height, -1.0);
 
     // create some sample triangle
     Vertex a(Vec3(-0.5f, 0.5f, -2.0f));

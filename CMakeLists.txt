@@ -29,6 +29,10 @@ add_executable(RayTracer13
 	input/VRSceneDecoder.cpp
 	input/CameraSettings.h
 	input/CameraSettings.cpp
+	input/ImageSettings.h
+	input/ImageSettings.cpp
+	input/Settings.h
+	input/Settings.cpp
 	input/Scene.h
 	input/Scene.cpp
 	input/SceneDecoderJSON.h
