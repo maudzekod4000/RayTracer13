@@ -18,20 +18,11 @@
 #include "input/VRSceneDecoder.h"
 #include "input/SceneDecoderJSON.h"
 #include "input/FileReader.h"
+#include "input/Scene.h"
 
-constexpr uint16_t WIDTH = 1920;
-constexpr uint16_t HEIGHT = 1080;
 constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
-    const uint16_t width = WIDTH;
-    const uint16_t height = HEIGHT;
-    const PPMImageMeta metadata(width, height, MAX_COLOR);
-    PPMImage image(metadata);
-    Camera camera(Vec3(0.0f), glm::identity<Mat3>(), width, height, -1.0);
-
-    const Vec3 forward(0.0, 0.0, -1.0);
-
     // Read the scene file
     const std::filesystem::path filePath = "../scenes/basic/scene0.crtscene";
     std::expected<std::vector<char>, std::string> fileContentExp = FileReader::readFile(filePath);
@@ -49,7 +40,14 @@ int main() {
         std::cerr << sceneExp.error() << std::endl;
         return 1;
     }
+
+    const Scene& scene = sceneExp.value();
+    const ImageSettings& imgSettings = scene.getSettings().getImgSettings();
+    const CameraSettings& camSettings = scene.getSettings().
     
+    const PPMImageMeta metadata(imgSettings.getWidth(), imgSettings.getHeight(), MAX_COLOR);
+    PPMImage image(metadata);
+    Camera camera(Vec3(0.0f), glm::identity<Mat3>(), imgSettings.getWidth(), imgSettings.getHeight(), -1.0);
 
     // create some sample triangle
     Vertex a(Vec3(-0.5f, 0.5f, -2.0f));

@@ -249,7 +249,7 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
 
   CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
   ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
-  Settings s(std::move(backgroundColor), std::move(is));
+  Settings s(std::move(backgroundColor), std::move(is), std::move(cs));
 
-  return Scene(std::move(cs), std::move(s), std::move(sceneObjects));
+  return Scene(std::move(s), std::move(sceneObjects));
 }

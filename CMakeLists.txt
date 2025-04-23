@@ -6,21 +6,15 @@ set(DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(RayTracer13 
 	main.cpp
-
 	output/ppm/PPMColor.h
-
 	output/ppm/PPMImage.h
 	output/ppm/PPMImage.cpp
-
 	output/ppm/PPMImageFileWriter.h
 	output/ppm/PPMImageFileWriter.cpp
-
 	output/ppm/PPMImageMeta.h
 	output/ppm/PPMImageMeta.cpp
-
 	output/ppm/PPMImageWriter.h
 	output/ppm/PPMImageWriter.cpp
-
 	sampling/Ray.h
 	sampling/Camera.h
 	sampling/Camera.cpp
@@ -31,19 +25,16 @@ add_executable(RayTracer13
 	sampling/IntersectionData.h
 	sampling/Object.h
 	sampling/Object.cpp
-
 	input/VRSceneDecoder.h
 	input/VRSceneDecoder.cpp
-
+	input/CameraSettings.h
+	input/CameraSettings.cpp
 	input/Scene.h
 	input/Scene.cpp
-
 	input/SceneDecoderJSON.h
 	input/SceneDecoderJSON.cpp
-
 	input/FileReader.h
 	input/FileReader.cpp
-
 	calc/TypeDefs.h
 )
 

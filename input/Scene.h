@@ -21,21 +21,8 @@ class ImageSettings final {
 public:
 	explicit ImageSettings(uint16_t w, uint16_t h) noexcept;
 
-	ImageSettings(const ImageSettings& is) noexcept {
-		std::cout << "copy constructor" << std::endl;
-		this->width = is.width;
-		this->height = is.height;
-	}
-
-	ImageSettings(ImageSettings&& is) noexcept {
-		std::cout << "move constructor" << std::endl;
-		this->width = is.width;
-		this->height = is.height;
-		is.width = 0;
-		is.height = 0;
-	}
-
 	uint16_t getWidth() const noexcept;
+	uint16_t getHeight() const noexcept;
 private:
 	uint16_t width;
 	uint16_t height;
@@ -43,21 +30,31 @@ private:
 
 class Settings {
 public:
-	Settings(Vec3&& backgroundColor, ImageSettings&&) noexcept;
+	Settings(Vec3&& backgroundColor, ImageSettings&&, CameraSettings&&) noexcept;
+
+	const ImageSettings& getImgSettings() const noexcept;
+	const CameraSettings& getCamSettings() const noexcept;
 private:
-	// The color of the background when the ray goes to infinity.
+	// The color of the pixel when the ray does not hit anything.
 	Vec3 backgroundColor;
 	ImageSettings imageSettings;
+	CameraSettings camSettings;
 };
 
+/// Represents the loaded scene file.
 class Scene {
 public:
-	Scene(CameraSettings&&, Settings&&, std::vector<Object>&&);
+	Scene(Settings&&, std::vector<Object>&&);
+
+	const Settings& getSettings() const noexcept;
 
 	// TODO: Think about the class design here. Which method we need and which have to be deleted.
 	Scene(Scene&&) = default;
+
+	// Scene is too expensive to copy.
+	Scene(const Scene&) = delete;
+	Scene& operator=(const Scene&) = delete;
 private:
-	CameraSettings cameraSettings;
 	Settings settings;
 	std::vector<Object> objects;
 };
