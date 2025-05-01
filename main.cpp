@@ -15,8 +15,8 @@
 #include "Vertex.h"
 #include "Triangle.h"
 #include "IntersectionData.h"
-#include "input/VRSceneDecoder.h"
-#include "input/SceneDecoderJSON.h"
+#include "input/RenderConfigDecoder.h"
+#include "input/RenderConfigDecoderJSON.h"
 #include "input/FileReader.h"
 #include "input/Scene.h"
 #include "input/CameraSettings.h"
@@ -35,7 +35,7 @@ int main() {
         return 1;
     }
 
-    std::unique_ptr<SceneDecoder> decoder(new SceneDecoderJSON);
+    std::unique_ptr<RenderConfigDecoder> decoder(new RenderConfigDecoderJSON);
 
     auto sceneExp = decoder->decode((uint8_t*)(fileContentExp.value().data()), fileContentExp.value().size());
 
@@ -44,10 +44,10 @@ int main() {
         return 1;
     }
 
-    const Scene& scene = sceneExp.value();
+    const RenderConfig& renderConfig = sceneExp.value();
     const ImageSettings& imgSettings = scene.getSettings().getImgSettings();
     const CameraSettings& camSettings = scene.getSettings().getCamSettings();
-    const uint16_t width = imgSettings.getWidth();
+    const uint16_t width = renderConfig.settings.getImgSettings().getWidth();
     const uint16_t height = imgSettings.getHeight();
     
     const PPMImageMeta metadata(width, height, MAX_COLOR);

@@ -25,8 +25,7 @@ add_executable(RayTracer13
 	sampling/IntersectionData.h
 	sampling/Object.h
 	sampling/Object.cpp
-	input/VRSceneDecoder.h
-	input/VRSceneDecoder.cpp
+	input/RenderConfigDecoder.h
 	input/CameraSettings.h
 	input/CameraSettings.cpp
 	input/ImageSettings.h
@@ -35,10 +34,11 @@ add_executable(RayTracer13
 	input/Settings.cpp
 	input/Scene.h
 	input/Scene.cpp
-	input/SceneDecoderJSON.h
-	input/SceneDecoderJSON.cpp
+	input/RenderConfigDecoderJSON.h
+	input/RenderConfigDecoderJSON.cpp
 	input/FileReader.h
 	input/FileReader.cpp
+	input/RenderConfig.h
 	calc/TypeDefs.h
 )
 

@@ -1,4 +1,4 @@
-#include "SceneDecoderJSON.h"
+#include "RenderConfigDecoderJSON.h"
 
 #include <assert.h>
 #include <format>
@@ -23,7 +23,7 @@ constexpr char kObjects[] = "objects";
 constexpr char kVertices[] = "vertices";
 constexpr char kTriangles[] = "triangles";
 
-std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, size_t len)
+std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const uint8_t* data, size_t len)
 {
   assert(data);
   assert(len > 0);
@@ -250,6 +250,7 @@ std::expected<Scene, std::string> SceneDecoderJSON::decode(const uint8_t* data, 
   CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
   ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
   Settings s(std::move(backgroundColor), std::move(is), std::move(cs));
+  Scene sc(std::move(sceneObjects));
 
-  return Scene(std::move(s), std::move(sceneObjects));
+  return RenderConfig(std::move(s), std::move(sc));
 }

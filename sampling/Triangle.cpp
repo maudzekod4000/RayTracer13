@@ -3,16 +3,23 @@
 #include "Ray.h"
 #include "IntersectionData.h"
 
-// Calculates the area of the triangle defined by the three point arguments.
+// Calculates the area of the triangle defined by the three points.
 static float calculateArea(const Vec3& a, const Vec3& b, const Vec3& c)
 {
 	return glm::length(glm::cross(b - a, c - a)) / 2.0f;
 }
 
+static Vec3 calculateNormal(const Vertex& a, const Vertex& b, const Vertex& c)
+{
+	return glm::normalize(glm::cross(b.pos() - a.pos(), c.pos() - a.pos()));
+}
+
 Triangle::Triangle(Vertex&& a, Vertex&& b, Vertex&& c):
-    a(std::move(a)), b(std::move(b)), c(std::move(c)),
-    n(glm::normalize(glm::cross(b.pos() - a.pos(), c.pos() - a.pos()))),
-    objIdx(-1)
+	a(std::move(a)),
+	b(std::move(b)),
+	c(std::move(c)),
+	n(calculateNormal(a, b, c)),
+	objIdx(-1)
 {}
 
 float Triangle::area() const
