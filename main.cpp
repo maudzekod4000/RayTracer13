@@ -37,38 +37,28 @@ int main() {
 
     std::unique_ptr<RenderConfigDecoder> decoder(new RenderConfigDecoderJSON);
 
-    auto sceneExp = decoder->decode((uint8_t*)(fileContentExp.value().data()), fileContentExp.value().size());
+    auto renderConfExp = decoder->decode((uint8_t*)(fileContentExp.value().data()), fileContentExp.value().size());
 
-    if (sceneExp.has_value() == false) {
-        std::cerr << sceneExp.error() << std::endl;
+    if (renderConfExp.has_value() == false) {
+        std::cerr << renderConfExp.error() << std::endl;
         return 1;
     }
 
-    const RenderConfig& renderConfig = sceneExp.value();
-    const ImageSettings& imgSettings = scene.getSettings().getImgSettings();
-    const CameraSettings& camSettings = scene.getSettings().getCamSettings();
-    const uint16_t width = renderConfig.settings.getImgSettings().getWidth();
-    const uint16_t height = imgSettings.getHeight();
+    const RenderConfig& renderConfig = renderConfExp.value();
+    const uint16_t width = renderConfig.getImageSettings().getWidth();
+    const uint16_t height = renderConfig.getImageSettings().getHeight();
     
     const PPMImageMeta metadata(width, height, MAX_COLOR);
     PPMImage image(metadata);
-    Camera camera(Vec3(0.0f), glm::identity<Mat3>(), width, height, -1.0);
-
-    // create some sample triangle
-    Vertex a(Vec3(-0.5f, 0.5f, -2.0f));
-    Vertex b(Vec3(-0.0f, -0.5f, -2.0f));
-    Vertex c(Vec3(0.5f, 0.5f, -2.0f));
-
-    Triangle tr(std::move(a), std::move(b), std::move(c));
+    Camera camera(renderConfig.getCameraSettings().getPos(), renderConfig.getCameraSettings().getTransform(), width, height, -1.0);
 
     std::cout << "Begin rendering..." << std::endl;
 
     for (uint16_t i = 0; i < width; i++) {
         for (uint16_t j = 0; j < height; j++) {
             const Ray r = camera.generateRay(i, j);
-            IntersectionData id{};
-            const bool intersects = tr.intersect(r, id);
-            if (intersects) {
+            IntersectionData id = renderConfig.getScene().intersect(r);
+            if (id.intersection) {
                 image.writePixel(j, i, PPMColor(MAX_COLOR, 0, 0));
             }
             else {

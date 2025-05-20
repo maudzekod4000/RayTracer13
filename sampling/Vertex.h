@@ -3,14 +3,13 @@
 
 #include "TypeDefs.h"
 
-struct Vertex {
+struct Vertex final {
 public:
 	Vertex(const Vec3& pos) : position(pos) {}
 
 	const Vec3& pos() const { return position; }
 private:
   Vec3 position;
-  Vec3 smoothNormal{};
 };
 
 #endif // !VERTEX_H

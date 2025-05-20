@@ -23,8 +23,6 @@ private:
 	Vertex a;
 	Vertex b;
 	Vertex c;
-	Vec3 n;
-	int objIdx;
 };
 
 #endif // !TRIANGLE_H

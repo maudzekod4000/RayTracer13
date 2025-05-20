@@ -2,22 +2,14 @@
 #define SETTINGS_H
 
 #include "TypeDefs.h"
-#include "ImageSettings.h"
-#include "CameraSettings.h"
 
+// General settings that do not fall into any specific category (or at least not yet).
 class Settings {
 public:
-	Settings(Vec3&& backgroundColor, ImageSettings&&, CameraSettings&&) noexcept;
-
-	const ImageSettings& getImgSettings() const noexcept;
-	const CameraSettings& getCamSettings() const noexcept;
+	Settings(Vec3&& backgroundColor) noexcept;
 private:
 	// The color of the pixel when the ray does not hit anything.
-	// TODO: These have to live separately in the RenderConfig object and 
-	// Settings should be renamed to GeneralSettings and hold just the background color.
-	Vec3 backgroundColor;
-	ImageSettings imageSettings;
-	CameraSettings camSettings;
+	Vec3 backgroundColor; // TODO: Use PPMColor for this
 };
 
 #endif // !SETTINGS_H

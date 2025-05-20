@@ -17,9 +17,7 @@ static Vec3 calculateNormal(const Vertex& a, const Vertex& b, const Vertex& c)
 Triangle::Triangle(Vertex&& a, Vertex&& b, Vertex&& c):
 	a(std::move(a)),
 	b(std::move(b)),
-	c(std::move(c)),
-	n(calculateNormal(a, b, c)),
-	objIdx(-1)
+	c(std::move(c))
 {}
 
 float Triangle::area() const
@@ -29,6 +27,7 @@ float Triangle::area() const
 
 bool Triangle::intersect(const Ray& ray, IntersectionData& intersectionData) const
 {
+	static const Vec3 n = calculateNormal(a, b, c);
 	const float rayProj = glm::dot(ray.dir, n);
 	// The projection of the ray direction onto the normal of the triangle
 	// is the length from the ray origin to the traingle plane.

@@ -139,8 +139,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
     return std::unexpected(std::format(missingInvalidKeyFmt, kObjects));
   }
 
-  std::vector<Object> sceneObjects;
-  sceneObjects.reserve(objects.Size());
+  std::vector<Triangle> sceneTriangles;
 
   for (const auto& object : objects.GetArray()) {
     if (!object.IsObject()) {
@@ -159,9 +158,6 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
       return std::unexpected(std::format(missingInvalidKeyFmt, kTriangles));
     }
 
-    std::vector<Triangle> sceneTriangles;
-    sceneTriangles.reserve(triangles.Size() / 3);
-
     for (size_t i = 0; i < triangles.Size(); i += 3) {
       const auto& vertex1Idx = triangles[i];
 
@@ -169,19 +165,19 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex1Idx.GetString(), kTriangles));
       }
 
-      const auto& vertex1x = vertices[vertex1Idx.GetInt()];
+      const auto& vertex1x = vertices[vertex1Idx.GetInt() * 3];
 
       if (!vertex1x.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex1x.GetString(), kVertices));
       }
 
-      const auto& vertex1y = vertices[vertex1Idx.GetInt() + 1];
+      const auto& vertex1y = vertices[vertex1Idx.GetInt() * 3 + 1];
 
       if (!vertex1y.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex1y.GetString(), kVertices));
       }
 
-      const auto& vertex1z = vertices[vertex1Idx.GetInt() + 2];
+      const auto& vertex1z = vertices[vertex1Idx.GetInt() * 3 + 2];
 
       if (!vertex1z.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex1z.GetString(), kVertices));
@@ -195,19 +191,19 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex2Idx.GetString(), kTriangles));
       }
 
-      const auto& vertex2x = vertices[vertex2Idx.GetInt()];
+      const auto& vertex2x = vertices[vertex2Idx.GetInt() * 3];
 
       if (!vertex2x.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex2x.GetString(), kVertices));
       }
 
-      const auto& vertex2y = vertices[vertex2Idx.GetInt() + 1];
+      const auto& vertex2y = vertices[vertex2Idx.GetInt() * 3 + 1];
 
       if (!vertex2y.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex2y.GetString(), kVertices));
       }
 
-      const auto& vertex2z = vertices[vertex2Idx.GetInt() + 2];
+      const auto& vertex2z = vertices[vertex2Idx.GetInt() * 3 + 2];
 
       if (!vertex2z.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex2z.GetString(), kVertices));
@@ -221,19 +217,19 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex3Idx.GetString(), kTriangles));
       }
 
-      const auto& vertex3x = vertices[vertex3Idx.GetInt()];
+      const auto& vertex3x = vertices[vertex3Idx.GetInt() * 3];
 
       if (!vertex3x.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex3x.GetString(), kVertices));
       }
 
-      const auto& vertex3y = vertices[vertex3Idx.GetInt() + 1];
+      const auto& vertex3y = vertices[vertex3Idx.GetInt() * 3 + 1];
 
       if (!vertex3y.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex3y.GetString(), kVertices));
       }
 
-      const auto& vertex3z = vertices[vertex3Idx.GetInt() + 2];
+      const auto& vertex3z = vertices[vertex3Idx.GetInt() * 3 + 2];
 
       if (!vertex3z.IsNumber()) {
         return std::unexpected(std::format(invalidValueInArrayFmt, vertex3z.GetString(), kVertices));
@@ -243,14 +239,12 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
       sceneTriangles.emplace_back(Vertex(vertex1Pos), Vertex(vertex2Pos), Vertex(vertex3Pos));
     }
-
-    sceneObjects.emplace_back(std::move(sceneTriangles));
   }
 
   CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
   ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
-  Settings s(std::move(backgroundColor), std::move(is), std::move(cs));
-  Scene sc(std::move(sceneObjects));
+  Settings s(std::move(backgroundColor));
+  Scene sc(std::move(sceneTriangles));
 
-  return RenderConfig(std::move(s), std::move(sc));
+  return RenderConfig(std::move(cs), std::move(s), std::move(is), std::move(sc));
 }
