@@ -28,7 +28,7 @@ constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
     // Read the scene file
-    const std::filesystem::path filePath = "../scenes/basic/scene1.crtscene";
+    const std::filesystem::path filePath = "../scenes/basic/scene3.crtscene";
     std::expected<std::vector<char>, std::string> fileContentExp = FileReader::readFile(filePath);
 
     if (fileContentExp.has_value() == false) {
@@ -60,7 +60,7 @@ int main() {
             const Ray r = camera.generateRay(i, j);
             IntersectionData id = renderConfig.getScene().intersect(r);
             if (id.intersection) {
-                image.writePixel(j, i, PPMColor(rand() % MAX_COLOR, rand() % MAX_COLOR, rand() % MAX_COLOR));
+                image.writePixel(j, i, PPMColor(rand() % 255, rand() % 255, rand() % 255));
             }
             else {
                 image.writePixel(j, i, PPMColor(0, MAX_COLOR, 0));
