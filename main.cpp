@@ -28,7 +28,7 @@ constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
     // Read the scene file
-    const std::filesystem::path filePath = "../scenes/basic/scene3.crtscene";
+    const std::filesystem::path filePath = "../scenes/basic/scene4.crtscene";
     std::expected<std::vector<char>, std::string> fileContentExp = FileReader::readFile(filePath);
 
     if (fileContentExp.has_value() == false) {

@@ -6,9 +6,9 @@
 
 struct IntersectionData {
   Vec3 p{};
-  Vec3 pN{};
-  Vec3 hitBaryCentricCoordinates{};
-  Vec3 pNNonSmooth{};
+  //Vec3 pN{};
+  //Vec3 hitBaryCentricCoordinates{};
+  //Vec3 pNNonSmooth{};
   float t = 9999.9f;
   bool intersection = false;
 };
