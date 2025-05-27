@@ -48,6 +48,5 @@ add_dependencies(${PROJECT_NAME} rapidjson)
 target_include_directories(${PROJECT_NAME} PRIVATE
 ${DIR}/sampling
 ${DIR}/out 
-${DIR}/lib 
 ${DIR}/calc 
 ${RAPIDJSON_INCLUDE_DIR})
