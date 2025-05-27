@@ -1,6 +1,3 @@
 #include "Object.h"
 
-Object::Object(std::vector<Triangle>&& t) noexcept:
-	triangles(std::move(t))
-{
-}
+Object::Object(const Material& m) noexcept: material(m) {}

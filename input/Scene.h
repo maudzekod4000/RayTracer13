@@ -21,6 +21,8 @@ public:
 	IntersectionData intersect(const Ray&) const;
 private:
 	std::vector<Triangle> triangles;
+
+	std::
 };
 
 #endif // !SCENE_H

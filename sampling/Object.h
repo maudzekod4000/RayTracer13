@@ -1,17 +1,13 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include <vector>
-#include "Triangle.h"
-//#include "Material.h"
+#include "sampling/Material.h"
 
-class Object{
+class Object {
 public:
-  Object(std::vector<Triangle>&&) noexcept;
+	Object(const Material&) noexcept;
 private:
-
-  std::vector<Triangle> triangles;
-  //Material mat;
+	Material material;
 };
 
 #endif // !OBJECT_H

@@ -13,6 +13,7 @@ class PPMImageMeta;
 /// </summary>
 class PPMImage {
 public:
+	// TODO: Instead of a friend class we can do a getter to reference to const.
   friend class PPMImageWriter;
   PPMImage(const PPMImageMeta& metadata);
 

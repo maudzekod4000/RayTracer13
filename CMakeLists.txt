@@ -25,6 +25,7 @@ add_executable(RayTracer13
 	sampling/IntersectionData.h
 	sampling/Object.h
 	sampling/Object.cpp
+	sampling/Material.h
 	input/RenderConfigDecoder.h
 	input/CameraSettings.h
 	input/CameraSettings.cpp
@@ -46,7 +47,6 @@ include("${DIR}/lib/rapidjson/rapidjson.cmake")
 add_subdirectory(${DIR}/lib/glm) # Folder where glm's CMakeLists.txt lives
 add_dependencies(${PROJECT_NAME} rapidjson)
 target_include_directories(${PROJECT_NAME} PRIVATE
-${DIR}/sampling
-${DIR}/out 
-${DIR}/calc 
+${CMAKE_SOURCE_DIR}
+${DIR}/lib
 ${RAPIDJSON_INCLUDE_DIR})

@@ -1,37 +1,29 @@
 #include <iostream>
 #include <cstdint>
-#include <filesystem>
 #include <string>
-#include <fstream>
 #include <vector>
 #include <memory>
-#include <math.h>
 
 #include "output/ppm/PPMImageMeta.h"
 #include "output/ppm/PPMImage.h"
 #include "output/ppm/PPMColor.h"
 #include "output/ppm/PPMImageFileWriter.h"
-#include "Camera.h"
-#include "TypeDefs.h"
-#include "Vertex.h"
-#include "Triangle.h"
-#include "IntersectionData.h"
+#include "sampling/Camera.h"
+#include "sampling/IntersectionData.h"
 #include "input/RenderConfigDecoder.h"
 #include "input/RenderConfigDecoderJSON.h"
 #include "input/FileReader.h"
 #include "input/Scene.h"
 #include "input/CameraSettings.h"
 #include "input/ImageSettings.h"
-#include "input/Settings.h"
 
 constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
     // Read the scene file
-    const std::filesystem::path filePath = "../scenes/basic/scene4.crtscene";
-    std::expected<std::vector<char>, std::string> fileContentExp = FileReader::readFile(filePath);
+    const auto fileContentExp = FileReader::readFile("../scenes/basic/scene3.crtscene");
 
-    if (fileContentExp.has_value() == false) {
+    if (!fileContentExp.has_value()) {
         std::cerr << fileContentExp.error() << std::endl;
         return 1;
     }
@@ -40,7 +32,7 @@ int main() {
 
     auto renderConfExp = decoder->decode((uint8_t*)(fileContentExp.value().data()), fileContentExp.value().size());
 
-    if (renderConfExp.has_value() == false) {
+    if (!renderConfExp.has_value()) {
         std::cerr << renderConfExp.error() << std::endl;
         return 1;
     }
@@ -54,6 +46,17 @@ int main() {
     Camera camera(renderConfig.getCameraSettings().getPos(), renderConfig.getCameraSettings().getTransform(), width, height, -1.0);
 
     std::cout << "Begin rendering..." << std::endl;
+
+    // TODO:
+    // Think of a way to share a color, material, BRDF with an object.
+    // Firstly, we need a way to assoaciate a triangle with an object efficiently.
+    // For the latter, we might use a map with a key of a Range {start, end} and value
+    // is the Object associated with that range of triangles.
+    // The other, silly solution, would be to have a map int (triangle) -> int (object)
+    // From that map we can get the object index, and from the object index we can get
+    // additional information about it, like BRDF, material, color, etc.
+    // Another option would be to do a binary search every time we need a material, 
+    // but the hash map impl. is O(1) and the binary search is O(logN)
 
     for (uint16_t i = 0; i < width; i++) {
         for (uint16_t j = 0; j < height; j++) {

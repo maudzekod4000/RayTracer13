@@ -1,7 +1,8 @@
 #include "Triangle.h"
 
-#include "Ray.h"
-#include "IntersectionData.h"
+#include "calc/TypeDefs.h"
+#include "sampling/Ray.h"
+#include "sampling/IntersectionData.h"
 
 // Calculates the area of the triangle defined by the three points.
 static float calculateArea(const Vec3& a, const Vec3& b, const Vec3& c)
