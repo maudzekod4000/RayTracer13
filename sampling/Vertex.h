@@ -1,7 +1,7 @@
 #ifndef VERTEX_H
 #define VERTEX_H
 
-#include "TypeDefs.h"
+#include "calc/TypeDefs.h"
 
 struct Vertex final {
 public:

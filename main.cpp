@@ -21,7 +21,7 @@ constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
     // Read the scene file
-    const auto fileContentExp = FileReader::readFile("../scenes/basic/scene3.crtscene");
+    const auto fileContentExp = FileReader::readFile("../scenes/basic/scene4.crtscene");
 
     if (!fileContentExp.has_value()) {
         std::cerr << fileContentExp.error() << std::endl;
@@ -58,12 +58,16 @@ int main() {
     // Another option would be to do a binary search every time we need a material, 
     // but the hash map impl. is O(1) and the binary search is O(logN)
 
+    // TODO: It would be cool to have separate projects for outputting images, sampling,
+    // optim. algorithms, multithreading etc.
+
     for (uint16_t i = 0; i < width; i++) {
         for (uint16_t j = 0; j < height; j++) {
             const Ray r = camera.generateRay(i, j);
             IntersectionData id = renderConfig.getScene().intersect(r);
             if (id.intersection) {
-                image.writePixel(j, i, PPMColor(rand() % 255, rand() % 255, rand() % 255));
+                const Vec3 color = id.color;
+                image.writePixel(j, i, PPMColor(static_cast<uint16_t>(color.r * 255.0f), static_cast<uint16_t>(color.g * 255.0f), static_cast<uint16_t>(color.b * 255.0f)));
             }
             else {
                 image.writePixel(j, i, PPMColor(0, MAX_COLOR, 0));

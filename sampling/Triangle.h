@@ -1,7 +1,7 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
-#include "TypeDefs.h"
+#include "calc/TypeDefs.h"
 
 #include "Vertex.h"
 

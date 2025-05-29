@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <glm/ext/matrix_transform.hpp>
-#include "TypeDefs.h"
+#include "calc/TypeDefs.h"
 #include "Ray.h"
 
 struct Camera {

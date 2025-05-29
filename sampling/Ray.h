@@ -1,7 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "TypeDefs.h"
+#include "calc/TypeDefs.h"
 
 struct Ray {
   Ray(const Vec3& origin, const Vec3& dir): origin(origin), dir(dir) {}

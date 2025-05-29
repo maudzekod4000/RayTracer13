@@ -43,7 +43,7 @@ bool Triangle::intersect(const Ray& ray, IntersectionData& intersectionData) con
 	// If the intersection point is just a bit to the right of the triangle side we don't care.
 	// We avoid artifacts when two triangle sides are next to each other.
 	// We want them to blend a bit to avoid jagged edges.
-	constexpr float e = -0.000001;
+	constexpr float e = -0.000001f;
 
 	if (dot(n, cross(b.pos() - a.pos(), p - a.pos())) <= e ||
 		dot(n, cross(c.pos() - b.pos(), p - b.pos())) <= e ||

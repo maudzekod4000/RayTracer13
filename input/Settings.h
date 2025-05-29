@@ -1,7 +1,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include "TypeDefs.h"
+#include "calc/TypeDefs.h"
 
 // General settings that do not fall into any specific category (or at least not yet).
 class Settings {

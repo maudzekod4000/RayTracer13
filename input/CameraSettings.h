@@ -1,7 +1,7 @@
 #ifndef CAMERA_SETTINGS_H
 #define CAMERA_SETTINGS_H
 
-#include "TypeDefs.h"
+#include "calc/TypeDefs.h"
 
 class CameraSettings final {
 public:

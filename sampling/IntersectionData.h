@@ -1,11 +1,11 @@
 #ifndef INTERSECTION_DATA_H
 #define INTERSECTION_DATA_H
 
-#include "TypeDefs.h"
-#include "Material.h"
+#include "calc/TypeDefs.h"
 
 struct IntersectionData {
-  Vec3 p{};
+  Vec3 p{}; // TODO: Do we need to default initialize it?
+  Vec3 color{};
   //Vec3 pN{};
   //Vec3 hitBaryCentricCoordinates{};
   //Vec3 pNNonSmooth{};

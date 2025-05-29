@@ -10,7 +10,7 @@ enum class MaterialType {
   NONE // TODO: The default should be diffuse, why do we need None?
 };
 
-// TODO: In our ray tracer, materials will be read-only.
+// TODO: In our ray tracer, materials will be read-only so you can design it as immutable object.
 struct Material final {
   Vec3 albedo; ///< Natural color of the object/material.
   MaterialType type = MaterialType::NONE;
