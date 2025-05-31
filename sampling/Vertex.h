@@ -1,15 +1,7 @@
-#ifndef VERTEX_H
-#define VERTEX_H
+#pragma once
 
 #include "calc/TypeDefs.h"
 
-struct Vertex final {
-public:
-	Vertex(const Vec3& pos) : position(pos) {}
-
-	const Vec3& pos() const { return position; }
-private:
-  Vec3 position;
+struct Vertex {
+  Vec3 pos;
 };
-
-#endif // !VERTEX_H

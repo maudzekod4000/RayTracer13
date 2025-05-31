@@ -1,7 +1,4 @@
-#ifndef TRIANGLE_H
-#define TRIANGLE_H
-
-#include "calc/TypeDefs.h"
+#pragma once 
 
 #include "Vertex.h"
 
@@ -24,5 +21,3 @@ private:
 	Vertex b;
 	Vertex c;
 };
-
-#endif // !TRIANGLE_H

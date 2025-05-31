@@ -6,7 +6,7 @@
 // General settings that do not fall into any specific category (or at least not yet).
 class Settings {
 public:
-	Settings(Vec3&& backgroundColor) noexcept;
+	Settings(Vec3&& backgroundColor);
 private:
 	// The color of the pixel when the ray does not hit anything.
 	Vec3 backgroundColor; // TODO: Use PPMColor for this

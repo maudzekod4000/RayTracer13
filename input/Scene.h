@@ -7,10 +7,10 @@
 #include "sampling/IntersectionData.h"
 #include "sampling/Object.h"
 
-class Ray;
+struct Ray;
 
 /// Represents the loaded scene file.
-class Scene final {
+class Scene {
 public:
 	Scene(std::vector<Triangle>&&, std::vector<int>&& triangleIdxToObj, std::vector<Object>&&);
 
@@ -22,7 +22,7 @@ public:
 	Scene& operator=(const Scene&) = delete;
 
 	IntersectionData intersect(const Ray&) const;
-private /* fields */:
+
 	/// All the triangles from the loaded scene.
 	/// The triangles will be ordered by object ownership, i.e., the first (in the scene config) object's triangles
 	/// will be first in the collection, etc.
@@ -39,8 +39,6 @@ private /* fields */:
 
 	/// As read from the scene configuration.
 	std::vector<Object> objects;
-
-private /* methods */:
 
 	/// Calculate the color of the pixel at the triangle intersection point.
 	/// Uses Scene fields to get information about the object and material associated with the triangle.

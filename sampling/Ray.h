@@ -4,8 +4,8 @@
 #include "calc/TypeDefs.h"
 
 struct Ray {
-  Ray(const Vec3& origin, const Vec3& dir): origin(origin), dir(dir) {}
-  Ray() : Ray(Vec3(0.0f), Vec3(0.0f)) {}
+  Ray(const Vec3& origin, Vec3&& dir): origin(origin), dir(std::move(dir)) {}
+
   Vec3 origin;
   Vec3 dir;
 };

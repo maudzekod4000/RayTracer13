@@ -1,7 +1,6 @@
 #include "Scene.h"
 
 #include "calc/TypeDefs.h"
-
 #include "sampling/Material.h"
 
 Scene::Scene(std::vector<Triangle>&& t, std::vector<int>&& triangleIdxToObj, std::vector<Object>&& objs):

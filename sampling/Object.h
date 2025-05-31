@@ -15,4 +15,6 @@ private:
 	Material material;
 };
 
+// TODO: Ahh...it's good to have small objects, but it is better not to go to main memory so often...
+
 #endif // !OBJECT_H

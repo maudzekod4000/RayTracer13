@@ -38,12 +38,12 @@ int main() {
     }
 
     const RenderConfig& renderConfig = renderConfExp.value();
-    const uint16_t width = renderConfig.getImageSettings().getWidth();
-    const uint16_t height = renderConfig.getImageSettings().getHeight();
+    const uint16_t width = renderConfig.imageSettings.getWidth();
+    const uint16_t height = renderConfig.imageSettings.getHeight();
     
     const PPMImageMeta metadata(width, height, MAX_COLOR);
     PPMImage image(metadata);
-    Camera camera(renderConfig.getCameraSettings().getPos(), renderConfig.getCameraSettings().getTransform(), width, height, -1.0);
+    Camera camera(renderConfig.camSettings.getPos(), renderConfig.camSettings.getTransform(), width, height, -1.0);
 
     std::cout << "Begin rendering..." << std::endl;
 
@@ -64,7 +64,7 @@ int main() {
     for (uint16_t i = 0; i < width; i++) {
         for (uint16_t j = 0; j < height; j++) {
             const Ray r = camera.generateRay(i, j);
-            IntersectionData id = renderConfig.getScene().intersect(r);
+            IntersectionData id = renderConfig.scene.intersect(r);
             if (id.intersection) {
                 const Vec3 color = id.color;
                 image.writePixel(j, i, PPMColor(static_cast<uint16_t>(color.r * 255.0f), static_cast<uint16_t>(color.g * 255.0f), static_cast<uint16_t>(color.b * 255.0f)));

@@ -41,6 +41,7 @@ add_executable(RayTracer13
 	input/FileReader.cpp
 	input/RenderConfig.h
 	calc/TypeDefs.h
+	calc/MathUtils.h
 )
 
 include("${DIR}/lib/rapidjson/rapidjson.cmake")

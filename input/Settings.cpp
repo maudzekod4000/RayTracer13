@@ -1,6 +1,6 @@
 #include "Settings.h"
 
-Settings::Settings(Vec3&& backgroundColor) noexcept:
+Settings::Settings(Vec3&& backgroundColor):
 	backgroundColor(std::move(backgroundColor))
 {
 }

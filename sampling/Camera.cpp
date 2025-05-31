@@ -31,5 +31,5 @@ Ray Camera::generateRay(float x, float y) const
 
     const Vec3 rayDir(x, y, focalDist);
 
-    return Ray(pos, glm::normalize(applyTransformation(rayDir)));
+    return Ray(std::move(pos), glm::normalize(applyTransformation(rayDir)));
 }
