@@ -1,7 +1,10 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#define _USE_MATH_DEFINES
+
 #include <vector>
+#include <math.h>
 
 #include "sampling/Triangle.h"
 #include "sampling/IntersectionData.h"
@@ -29,17 +32,46 @@ public:
 			triangle.intersect(ray, intersectionData);
 		}
 
-
-
-		return intersectionData;
+		return calculatePixelColor(intersectionData);
 	}
 
-	inline Vec3 calculatePixelColor(const IntersectionData& triangle) const {
-		return triangle.material.albedo;
+	inline Vec3 calculatePixelColor(const IntersectionData& intr) const {
+		return calculateDirectLight(intr);
 	}
+
+  inline Vec3 calculateDirectLight(const IntersectionData& intr) const {
+    Vec3 finalColor(0);
+
+    for (const Light& light : lights) {
+      const Vec3 correctedHitPoint = intr.p + intr.pN * shadowBias;
+      Vec3 lightDir = light.pos - correctedHitPoint;
+      const float sphereRadius = glm::length(lightDir);
+      lightDir = glm::normalize(lightDir);
+
+      const float cosineLaw = glm::max(0.0f, glm::dot(lightDir, intr.pN));
+      const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
+      const Ray shadowRay(correctedHitPoint, lightDir);
+
+      IntersectionData shadowRayIntrs{};
+
+      for (auto& triangle : triangles) {
+        if (triangle.intersect(shadowRay, shadowRayIntrs)) {
+          break;
+        }
+      }
+
+      if (shadowRayIntrs.intersection) {
+        const Vec3 colorContribution = intr.material.albedo * sphereArea * cosineLaw / (1.0f / light.intensity);
+        finalColor += colorContribution;
+      }
+    }
+
+    return finalColor;
+  }
 
 	std::vector<Triangle> triangles;
 	std::vector<Light> lights;
+  float shadowBias = 0.0001f;
 };
 
 #endif // !SCENE_H

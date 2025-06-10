@@ -2,12 +2,12 @@
 #define INTERSECTION_DATA_H
 
 #include "calc/TypeDefs.h"
-#include "sampling/Triangle.h"
+#include "sampling/Material.h"
 
 struct IntersectionData {
-  Triangle triangle;
+  Material material;
   Vec3 p{}; // TODO: Do we need to default initialize it?
-  //Vec3 pN{};
+  Vec3 pN{};
   //Vec3 hitBaryCentricCoordinates{};
   //Vec3 pNNonSmooth{};
   float t = 99999.9f;

@@ -53,14 +53,8 @@ int main() {
     for (uint16_t i = 0; i < width; i++) {
         for (uint16_t j = 0; j < height; j++) {
             const Ray r = camera.generateRay(i, j);
-            IntersectionData id = renderConfig.scene.trace(r);
-            if (id.intersection) {
-                const Vec3 color = id.color;
-                image.writePixel(j, i, PPMColor(static_cast<uint16_t>(color.r * 255.0f), static_cast<uint16_t>(color.g * 255.0f), static_cast<uint16_t>(color.b * 255.0f)));
-            }
-            else {
-                image.writePixel(j, i, PPMColor(0, MAX_COLOR, 0));
-            }
+            Vec3 color = renderConfig.scene.trace(r);
+            image.writePixel(j, i, PPMColor(static_cast<uint16_t>(color.r * 255.0f), static_cast<uint16_t>(color.g * 255.0f), static_cast<uint16_t>(color.b * 255.0f)));
         }
     }
 

@@ -52,6 +52,8 @@ struct Triangle {
 		intersectionData.t = t;
 		intersectionData.p = p;
 		intersectionData.intersection = true;
+    intersectionData.material = material;
+		intersectionData.pN = n;
 
 		return true;
 	}
