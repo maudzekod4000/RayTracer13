@@ -11,7 +11,7 @@ enum class MaterialType {
 };
 
 // TODO: In our ray tracer, materials will be read-only so you can design it as immutable object.
-struct Material final {
+struct Material {
   Vec3 albedo; ///< Natural color of the object/material.
   MaterialType type = MaterialType::NONE;
   float ior = 1.0f;

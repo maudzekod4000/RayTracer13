@@ -47,17 +47,6 @@ int main() {
 
     std::cout << "Begin rendering..." << std::endl;
 
-    // TODO:
-    // Think of a way to share a color, material, BRDF with an object.
-    // Firstly, we need a way to assoaciate a triangle with an object efficiently.
-    // For the latter, we might use a map with a key of a Range {start, end} and value
-    // is the Object associated with that range of triangles.
-    // The other, silly solution, would be to have a map int (triangle) -> int (object)
-    // From that map we can get the object index, and from the object index we can get
-    // additional information about it, like BRDF, material, color, etc.
-    // Another option would be to do a binary search every time we need a material, 
-    // but the hash map impl. is O(1) and the binary search is O(logN)
-
     // TODO: It would be cool to have separate projects for outputting images, sampling,
     // optim. algorithms, multithreading etc.
 

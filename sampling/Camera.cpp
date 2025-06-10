@@ -1,16 +1,15 @@
 #include "Camera.h"
 
-Camera::Camera(const Vec3& pos, const Mat3& matrix, uint16_t sensorWidth, uint16_t sensorHeight, float focalDistance)
-    : pos(pos),
-    transformationMatrix(Mat4(matrix)),
-    sensorWidth(sensorWidth),
-    sensorHeight(sensorHeight),
-    aspectRatio(float(sensorWidth) / sensorHeight),
-    focalDist(focalDistance),
-    halfSensorW(sensorWidth / 2.0f),
-    halfSensorH(sensorHeight / 2.0f)
-{
-}
+Camera::Camera(const Vec3& pos, const Mat3& matrix, uint16_t sensorWidth, uint16_t sensorHeight, float focalDistance):
+  pos(pos),
+  transformationMatrix(Mat4(matrix)),
+  sensorWidth(sensorWidth),
+  sensorHeight(sensorHeight),
+  aspectRatio(float(sensorWidth) / sensorHeight),
+  focalDist(focalDistance),
+  halfSensorW(sensorWidth / 2.0f),
+  halfSensorH(sensorHeight / 2.0f)
+{}
 
 Ray Camera::generateRay(float x, float y) const
 {
@@ -31,5 +30,5 @@ Ray Camera::generateRay(float x, float y) const
 
     const Vec3 rayDir(x, y, focalDist);
 
-    return Ray(std::move(pos), glm::normalize(applyTransformation(rayDir)));
+    return Ray(pos, glm::normalize(applyTransformation(rayDir)));
 }

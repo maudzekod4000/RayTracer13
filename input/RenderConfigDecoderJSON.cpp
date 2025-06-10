@@ -140,19 +140,12 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 	}
 
 	std::vector<Triangle> sceneTriangles;
-	std::vector<int> triangleIdxToObj;
-	std::vector<Object> sceneObjects;
 
 	for (int objIdx = 0; objIdx < objects.Size(); objIdx++) {
 		const auto& object = objects.GetArray()[objIdx];
 		if (!object.IsObject()) {
 			return std::unexpected(std::format(missingInvalidKeyFmt, kObjects));
 		}
-
-		// TODO: Fake red material for now.
-		Material material;
-		material.albedo = Vec3(1, 0, 0);
-		sceneObjects.emplace_back(material);
 
 		const auto& vertices = object[kVertices];
 
@@ -168,8 +161,9 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
 		for (size_t i = 0; i < triangles.Size(); i += 3) {
 			const auto& vertex1Idx = triangles[i];
-
-			triangleIdxToObj.push_back(objIdx);
+			// TODO: Fake red material for now.
+			Material material;
+			material.albedo = Vec3(1, 0, 0);
 
 			if (!vertex1Idx.IsNumber() || vertex1Idx.GetInt() < 0 || vertex1Idx.GetInt() >= vertices.Size()) {
 				return std::unexpected(std::format(invalidValueInArrayFmt, vertex1Idx.GetString(), kTriangles));
@@ -247,14 +241,14 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
 			Vec3 vertex3Pos{ vertex3x.GetFloat(), vertex3y.GetFloat(), vertex3z.GetFloat() };
 
-			sceneTriangles.emplace_back(Vertex(vertex1Pos), Vertex(vertex2Pos), Vertex(vertex3Pos));
+			sceneTriangles.emplace_back(Vertex(vertex1Pos), Vertex(vertex2Pos), Vertex(vertex3Pos), std::move(material));
 		}
 	}
 
 	CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
 	ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
 	Settings s(std::move(backgroundColor));
-	Scene sc(std::move(sceneTriangles), std::move(triangleIdxToObj), std::move(sceneObjects));
+	Scene sc(std::move(sceneTriangles));
 
 	return RenderConfig(std::move(cs), std::move(s), std::move(is), std::move(sc));
 }

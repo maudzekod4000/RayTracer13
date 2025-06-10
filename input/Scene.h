@@ -6,13 +6,13 @@
 #include "sampling/Triangle.h"
 #include "sampling/IntersectionData.h"
 #include "sampling/Object.h"
-
-struct Ray;
+#include "calc/TypeDefs.h"
+#include "sampling/Material.h"
 
 /// Represents the loaded scene file.
 class Scene {
 public:
-	Scene(std::vector<Triangle>&&, std::vector<int>&& triangleIdxToObj, std::vector<Object>&&);
+	inline Scene(std::vector<Triangle>&& t): triangles(std::move(t)) {}
 
 	// TODO: Think about the class design here. Which method we need and which have to be deleted.
 	Scene(Scene&&) = default;
@@ -21,31 +21,31 @@ public:
 	Scene(const Scene&) = delete;
 	Scene& operator=(const Scene&) = delete;
 
-	IntersectionData intersect(const Ray&) const;
+	inline IntersectionData intersect(const Ray& ray) const {
+		IntersectionData intersectionData{};
+
+		for (auto& triangle : triangles) {
+			if (triangle.intersect(ray, intersectionData)) {
+				intersectionData.color = samplePixelColor(triangle);
+			}
+		}
+
+		return intersectionData;
+	}
 
 	/// All the triangles from the loaded scene.
 	/// The triangles will be ordered by object ownership, i.e., the first (in the scene config) object's triangles
 	/// will be first in the collection, etc.
 	std::vector<Triangle> triangles;
 
-	/// A mapping between the triangle idx in the Triangle collection and
-	/// the object index in Object collection.
-	/// For example: Get the object index of triangle[10]:
-	/// int objIdx = triangleIdxToObject[10];
-	/// Get the actual object:
-	/// Object o = objects[objIdx];
-	/// TODO: This could be more efficient with a range-key map.
-	std::vector<int> triangleIdxToObject;
-
-	/// As read from the scene configuration.
-	std::vector<Object> objects;
-
 	/// Calculate the color of the pixel at the triangle intersection point.
 	/// Uses Scene fields to get information about the object and material associated with the triangle.
 	/// @param triangle The triangle that is being hit. Could be useful for getting normal vector.
 	/// @param triangleIdx The index of the triangle in the Triangle collection.
 	/// @return Returns 3-component color (RGB).
-	Vec3 samplePixelColor(const Triangle& triangle, int triangleIdx) const;
+	inline Vec3 samplePixelColor(const Triangle& triangle) const {
+		return triangle.material.albedo;
+	}
 };
 
 #endif // !SCENE_H
