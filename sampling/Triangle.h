@@ -8,13 +8,15 @@
 #include "calc/MathUtils.h"
 
 struct Triangle {
-	inline Triangle(Vertex&& a, Vertex&& b, Vertex&& c, Material&& m):
-		a(std::move(a)),
-		b(std::move(b)),
-		c(std::move(c)),
+	inline Triangle(const Vertex& a, const Vertex& b, const Vertex& c, const Material& m):
+		a(a),
+		b(b),
+		c(c),
 		n(MathUtils::normal(a.pos, b.pos, c.pos)),
-		material(std::move(m))
+		material(m)
 	{}
+
+  inline Triangle() = default;
 
 	/// Calculates the triangle's area.
 	inline float area() const {
@@ -53,11 +55,10 @@ struct Triangle {
 
 		return true;
 	}
-private:
+
 	Vertex a;
 	Vertex b;
 	Vertex c;
 	Vec3 n;
-public:
 	Material material;
 };

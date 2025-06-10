@@ -21,7 +21,7 @@ constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
     // Read the scene file
-    const auto fileContentExp = FileReader::readFile("../scenes/basic/scene4.crtscene");
+    const auto fileContentExp = FileReader::readFile("../scenes/light/scene0.crtscene");
 
     if (!fileContentExp.has_value()) {
         std::cerr << fileContentExp.error() << std::endl;
@@ -53,7 +53,7 @@ int main() {
     for (uint16_t i = 0; i < width; i++) {
         for (uint16_t j = 0; j < height; j++) {
             const Ray r = camera.generateRay(i, j);
-            IntersectionData id = renderConfig.scene.intersect(r);
+            IntersectionData id = renderConfig.scene.trace(r);
             if (id.intersection) {
                 const Vec3 color = id.color;
                 image.writePixel(j, i, PPMColor(static_cast<uint16_t>(color.r * 255.0f), static_cast<uint16_t>(color.g * 255.0f), static_cast<uint16_t>(color.b * 255.0f)));

@@ -7,6 +7,7 @@
 #include "rapidjson/error/en.h"
 
 #include "sampling/Vertex.h"
+#include "sampling/Light.h"
 
 constexpr char missingInvalidKeyFmt[] = "Missing or invalid type for key '{}'";
 constexpr char sizeMismatchFmt[] = "Unexpected element count of {} when {} is required for key '{}'";
@@ -22,6 +23,8 @@ constexpr char kPos[] = "position";
 constexpr char kObjects[] = "objects";
 constexpr char kVertices[] = "vertices";
 constexpr char kTriangles[] = "triangles";
+constexpr char kLights[] = "lights";
+constexpr char kIntensity[] = "intensity";
 
 std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const uint8_t* data, size_t len)
 {
@@ -245,10 +248,40 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		}
 	}
 
+	std::vector<Light> sceneLights;
+
+	const auto& lights = d[kLights];
+
+	if (!lights.IsNull() && !lights.IsArray()) {
+		return std::unexpected(std::format(missingInvalidKeyFmt, kLights));
+	}
+
+	for (int i = 0; i < lights.Size(); i++) {
+		const auto& light = lights.GetArray()[i];
+		if (!light.IsObject()) {
+			return std::unexpected(std::format(missingInvalidKeyFmt, kLights));
+		}
+
+		const auto& pos = light[kPos];
+
+		if (!pos.IsArray() && pos.Size() != 3) {
+			return std::unexpected(std::format(missingInvalidKeyFmt, kLights));
+		}
+
+		Light sceneLight;
+		sceneLight.pos = Vec3(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+		
+		const auto& intensity = light[kIntensity];
+
+		sceneLight.intensity = intensity.GetInt();
+
+		sceneLights.push_back(sceneLight);
+	}
+
 	CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
 	ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
 	Settings s(std::move(backgroundColor));
-	Scene sc(std::move(sceneTriangles));
+	Scene sc(std::move(sceneTriangles), std::move(sceneLights));
 
 	return RenderConfig(std::move(cs), std::move(s), std::move(is), std::move(sc));
 }
