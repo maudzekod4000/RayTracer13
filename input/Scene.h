@@ -60,23 +60,16 @@ public:
         }
       }
 
-      float intensity = light.intensity;
-
-      if (shadowRayIntrs.t <= sphereRadius) {
-        intensity = 0.0f;
+      if (shadowRayIntrs.t > sphereRadius) {
+        const float cosineLaw = glm::max(0.0f, glm::dot(lightDir, intr.pN));
+        const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
+        // TODO: Here we should use the light's albedo not the material albedo.
+        const Vec3 colorContribution = Vec3(float(light.intensity) / sphereArea * cosineLaw);
+        finalColor += colorContribution;
       }
-
-      const float cosineLaw = glm::max(0.0f, glm::dot(lightDir, intr.pN));
-      const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
-      // TODO: Here we should use the light's albedo not the material albedo.
-      // Is there a way to control the color so it does not overflow above 1.0?
-      // For example, the material might have color (1, 0, 0) and the light contrubutes to
-      // (1.5, 0, 0), then we would overflow the colors
-      const Vec3 colorContribution = float(intensity) / sphereArea * cosineLaw * intr.material.albedo;
-      finalColor += glm::clamp(colorContribution, Vec3(0.0f), Vec3(1.0f));
     }
 
-    return finalColor;
+    return glm::clamp(finalColor, Vec3(0.0f), Vec3(1.0f));
   }
 
 	std::vector<Triangle> triangles;

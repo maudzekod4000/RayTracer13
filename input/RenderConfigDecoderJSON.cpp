@@ -25,6 +25,7 @@ constexpr char kVertices[] = "vertices";
 constexpr char kTriangles[] = "triangles";
 constexpr char kLights[] = "lights";
 constexpr char kIntensity[] = "intensity";
+constexpr char kAlbedo[] = "albedo";
 
 std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const uint8_t* data, size_t len)
 {
@@ -164,7 +165,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
 		for (size_t i = 0; i < triangles.Size(); i += 3) {
 			const auto& vertex1Idx = triangles[i];
-			// TODO: Fake red material for now.
+			// TODO: Fake material for now.
 			Material material;
 			material.albedo = Vec3(1, 0, 0);
 
@@ -275,12 +276,18 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
 		sceneLight.intensity = intensity.GetInt();
 
+    const auto& albedo = light[kAlbedo];
+
+    if (albedo.IsArray() && albedo.Size() == 3) {
+      sceneLight.albedo = Vec3(albedo[0].GetFloat(), albedo[1].GetFloat(), albedo[2].GetFloat());
+    }
+
 		sceneLights.push_back(sceneLight);
 	}
 
 	CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
 	ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
-	Settings s(std::move(backgroundColor));
+	Settings s(backgroundColor);
 	Scene sc(std::move(sceneTriangles), std::move(sceneLights), backgroundColor);
 
 	return RenderConfig(std::move(cs), std::move(s), std::move(is), std::move(sc));

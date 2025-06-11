@@ -21,7 +21,7 @@ constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
     // Read the scene file
-    const auto fileContentExp = FileReader::readFile("../scenes/light/scene0.crtscene");
+    const auto fileContentExp = FileReader::readFile("../scenes/light/scene1.crtscene");
 
     if (!fileContentExp.has_value()) {
         std::cerr << fileContentExp.error() << std::endl;
@@ -54,7 +54,7 @@ int main() {
         for (uint16_t j = 0; j < height; j++) {
             const Ray r = camera.generateRay(i, j);
             Vec3 color = renderConfig.scene.trace(r);
-            image.writePixel(j, i, PPMColor(static_cast<uint16_t>(color.r * 255.0f), static_cast<uint16_t>(color.g * 255.0f), static_cast<uint16_t>(color.b * 255.0f)));
+            image.writePixel(j, i, PPMColor(static_cast<uint16_t>(color.r * MAX_COLOR), static_cast<uint16_t>(color.g * MAX_COLOR), static_cast<uint16_t>(color.b * MAX_COLOR)));
         }
     }
 
