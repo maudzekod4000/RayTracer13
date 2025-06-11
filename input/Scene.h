@@ -14,9 +14,10 @@
 
 class Scene {
 public:
-	inline Scene(std::vector<Triangle>&& t, std::vector<Light>&& l):
+	inline Scene(std::vector<Triangle>&& t, std::vector<Light>&& l, const Vec3& background):
 		triangles(std::move(t)),
-		lights(std::move(l))
+		lights(std::move(l)),
+    backgroundColor(background)
 	{}
 
 	Scene(Scene&&) = default;
@@ -32,7 +33,9 @@ public:
 			triangle.intersect(ray, intersectionData);
 		}
 
-		return calculatePixelColor(intersectionData);
+    return intersectionData.intersection ?
+      calculatePixelColor(intersectionData) :
+      backgroundColor;
 	}
 
 	inline Vec3 calculatePixelColor(const IntersectionData& intr) const {
@@ -47,9 +50,6 @@ public:
       Vec3 lightDir = light.pos - correctedHitPoint;
       const float sphereRadius = glm::length(lightDir);
       lightDir = glm::normalize(lightDir);
-
-      const float cosineLaw = glm::max(0.0f, glm::dot(lightDir, intr.pN));
-      const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
       const Ray shadowRay(correctedHitPoint, lightDir);
 
       IntersectionData shadowRayIntrs{};
@@ -60,10 +60,20 @@ public:
         }
       }
 
-      if (shadowRayIntrs.intersection) {
-        const Vec3 colorContribution = intr.material.albedo * sphereArea * cosineLaw / (1.0f / light.intensity);
-        finalColor += colorContribution;
+      float intensity = light.intensity;
+
+      if (shadowRayIntrs.t <= sphereRadius) {
+        intensity = 0.0f;
       }
+
+      const float cosineLaw = glm::max(0.0f, glm::dot(lightDir, intr.pN));
+      const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
+      // TODO: Here we should use the light's albedo not the material albedo.
+      // Is there a way to control the color so it does not overflow above 1.0?
+      // For example, the material might have color (1, 0, 0) and the light contrubutes to
+      // (1.5, 0, 0), then we would overflow the colors
+      const Vec3 colorContribution = float(intensity) / sphereArea * cosineLaw * intr.material.albedo;
+      finalColor += glm::clamp(colorContribution, Vec3(0.0f), Vec3(1.0f));
     }
 
     return finalColor;
@@ -71,7 +81,8 @@ public:
 
 	std::vector<Triangle> triangles;
 	std::vector<Light> lights;
-  float shadowBias = 0.0001f;
+  Vec3 backgroundColor;
+  float shadowBias = 0.01f;
 };
 
 #endif // !SCENE_H

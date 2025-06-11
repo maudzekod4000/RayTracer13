@@ -281,7 +281,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 	CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
 	ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
 	Settings s(std::move(backgroundColor));
-	Scene sc(std::move(sceneTriangles), std::move(sceneLights));
+	Scene sc(std::move(sceneTriangles), std::move(sceneLights), backgroundColor);
 
 	return RenderConfig(std::move(cs), std::move(s), std::move(is), std::move(sc));
 }
