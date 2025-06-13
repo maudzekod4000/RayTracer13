@@ -53,7 +53,16 @@ struct Triangle {
 		intersectionData.p = p;
 		intersectionData.intersection = true;
     intersectionData.material = material;
-		intersectionData.pN = n;
+
+    float areaM = glm::length(glm::cross(p - a.pos, c.pos - a.pos)) / 2.0f;
+    float areaN = glm::length(glm::cross(b.pos - a.pos, p - a.pos)) / 2.0f;
+    float areaTri = glm::length(glm::cross(b.pos - a.pos, c.pos - a.pos)) / 2.0f;
+
+    float u = areaM / areaTri;
+    float v = areaN / areaTri;
+    float w = 1 - u - v;
+
+    intersectionData.pN = b.normal * u + c.normal * v + a.normal * w;
 
 		return true;
 	}

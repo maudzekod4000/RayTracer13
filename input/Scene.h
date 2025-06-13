@@ -63,7 +63,6 @@ public:
       if (shadowRayIntrs.t > sphereRadius) {
         const float cosineLaw = glm::max(0.0f, glm::dot(lightDir, intr.pN));
         const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
-        // TODO: Here we should use the light's albedo not the material albedo.
         const Vec3 colorContribution = Vec3(float(light.intensity) / sphereArea * cosineLaw);
         finalColor += colorContribution;
       }
@@ -75,7 +74,7 @@ public:
 	std::vector<Triangle> triangles;
 	std::vector<Light> lights;
   Vec3 backgroundColor;
-  float shadowBias = 0.01f;
+  float shadowBias = 0.0005f;
 };
 
 #endif // !SCENE_H

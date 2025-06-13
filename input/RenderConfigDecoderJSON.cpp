@@ -1,5 +1,6 @@
 #include "RenderConfigDecoderJSON.h"
 
+#include <unordered_map>
 #include <assert.h>
 #include <format>
 
@@ -26,6 +27,12 @@ constexpr char kTriangles[] = "triangles";
 constexpr char kLights[] = "lights";
 constexpr char kIntensity[] = "intensity";
 constexpr char kAlbedo[] = "albedo";
+
+struct ParseTriangle {
+  int v1;
+  int v2;
+  int v3;
+};
 
 std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const uint8_t* data, size_t len)
 {
@@ -146,6 +153,8 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 	std::vector<Triangle> sceneTriangles;
 
 	for (int objIdx = 0; objIdx < objects.Size(); objIdx++) {
+    std::vector<ParseTriangle> parsedTriangles;
+    std::unordered_map<int, Vertex> idxToVertex;
 		const auto& object = objects.GetArray()[objIdx];
 		if (!object.IsObject()) {
 			return std::unexpected(std::format(missingInvalidKeyFmt, kObjects));
@@ -163,11 +172,11 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 			return std::unexpected(std::format(missingInvalidKeyFmt, kTriangles));
 		}
 
+		// TODO: Fake material for now.
+		Material material;
+		material.albedo = Vec3(1, 0, 0);
 		for (size_t i = 0; i < triangles.Size(); i += 3) {
 			const auto& vertex1Idx = triangles[i];
-			// TODO: Fake material for now.
-			Material material;
-			material.albedo = Vec3(1, 0, 0);
 
 			if (!vertex1Idx.IsNumber() || vertex1Idx.GetInt() < 0 || vertex1Idx.GetInt() >= vertices.Size()) {
 				return std::unexpected(std::format(invalidValueInArrayFmt, vertex1Idx.GetString(), kTriangles));
@@ -192,6 +201,8 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 			}
 
 			Vec3 vertex1Pos{ vertex1x.GetFloat(), vertex1y.GetFloat(), vertex1z.GetFloat() };
+
+      idxToVertex[vertex1Idx.GetInt()] = Vertex(vertex1Pos);
 
 			const auto& vertex2Idx = triangles[i + 1];
 
@@ -219,6 +230,8 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
 			Vec3 vertex2Pos{ vertex2x.GetFloat(), vertex2y.GetFloat(), vertex2z.GetFloat() };
 
+      idxToVertex[vertex2Idx.GetInt()] = Vertex(vertex2Pos);
+
 			const auto& vertex3Idx = triangles[i + 2];
 
 			if (!vertex3Idx.IsNumber() || vertex3Idx.GetInt() < 0 || vertex3Idx.GetInt() >= vertices.Size()) {
@@ -245,8 +258,39 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
 			Vec3 vertex3Pos{ vertex3x.GetFloat(), vertex3y.GetFloat(), vertex3z.GetFloat() };
 
-			sceneTriangles.emplace_back(Vertex(vertex1Pos), Vertex(vertex2Pos), Vertex(vertex3Pos), std::move(material));
+      idxToVertex[vertex3Idx.GetInt()] = Vertex(vertex3Pos);
+
+      ParseTriangle pt{ vertex1Idx.GetInt(), vertex2Idx.GetInt(), vertex3Idx.GetInt() };
+
+      parsedTriangles.push_back(pt);
 		}
+
+    // Calculate smooth normals.
+    for (const auto& triangle : parsedTriangles) {
+      Vertex& v1 = idxToVertex[triangle.v1];
+      Vertex& v2 = idxToVertex[triangle.v2];
+      Vertex& v3 = idxToVertex[triangle.v3];
+
+      Vec3 n = MathUtils::normal(v1.pos, v2.pos, v3.pos);
+
+      v1.normal += n;
+      v1.normal = glm::normalize(v1.normal);
+
+      v2.normal += n;
+      v2.normal = glm::normalize(v2.normal);
+
+      v3.normal += n;
+      v3.normal = glm::normalize(v3.normal);
+    }
+
+    for (const auto& triangle : parsedTriangles) {
+      Vertex& v1 = idxToVertex[triangle.v1];
+      Vertex& v2 = idxToVertex[triangle.v2];
+      Vertex& v3 = idxToVertex[triangle.v3];
+
+		  sceneTriangles.emplace_back(v1, v2, v3, material);
+    }
+
 	}
 
 	std::vector<Light> sceneLights;
@@ -276,10 +320,12 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
 		sceneLight.intensity = intensity.GetInt();
 
-    const auto& albedo = light[kAlbedo];
+    if (light.HasMember(kAlbedo)) {
+      const auto& albedo = light[kAlbedo];
 
-    if (albedo.IsArray() && albedo.Size() == 3) {
-      sceneLight.albedo = Vec3(albedo[0].GetFloat(), albedo[1].GetFloat(), albedo[2].GetFloat());
+      if (albedo.IsArray() && albedo.Size() == 3) {
+        sceneLight.albedo = Vec3(albedo[0].GetFloat(), albedo[1].GetFloat(), albedo[2].GetFloat());
+      }
     }
 
 		sceneLights.push_back(sceneLight);
