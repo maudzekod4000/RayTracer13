@@ -27,11 +27,14 @@ constexpr char kTriangles[] = "triangles";
 constexpr char kLights[] = "lights";
 constexpr char kIntensity[] = "intensity";
 constexpr char kAlbedo[] = "albedo";
+constexpr char kMaterials[] = "materials";
+constexpr char kType[] = "type";
 
 struct ParseTriangle {
   int v1;
   int v2;
   int v3;
+  int matIdx = -1;
 };
 
 std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const uint8_t* data, size_t len)
@@ -144,6 +147,47 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
 	Vec3 cameraPos(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
 
+  std::vector<Material> sceneMaterials;
+  if (d.HasMember("materials")) {
+    const auto& materials = d[kMaterials];
+
+    if (materials.IsArray()) {
+      for (size_t i = 0; i < materials.Size(); i++) {
+        const auto& material = materials[i].GetObject();
+
+        Material sceneMaterial;
+
+        auto type = material[kType].GetString();
+
+        if (type == "diffuse") {
+          sceneMaterial.type = MaterialType::DIFFUSE;
+        }
+        else if (type == "reflective") {
+          sceneMaterial.type = MaterialType::REFLECTIVE;
+        }
+        else if (type == "refractive") {
+          sceneMaterial.type = MaterialType::REFRACTIVE;
+        }
+        else {
+          sceneMaterial.type = MaterialType::DIFFUSE;
+        }
+
+        auto isSmoothShading = material["smooth_shading"].GetBool();
+
+        sceneMaterial.smoothShading = isSmoothShading;
+
+        auto albedoVec = material[kAlbedo].GetArray();
+
+        sceneMaterial.albedo.x = albedoVec[0].GetFloat();
+        sceneMaterial.albedo.y = albedoVec[1].GetFloat();
+        sceneMaterial.albedo.z = albedoVec[2].GetFloat();
+
+        sceneMaterials.push_back(sceneMaterial);
+      }
+    }
+
+  }
+
 	const auto& objects = d[kObjects];
 
 	if (!objects.IsArray()) {
@@ -160,6 +204,13 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 			return std::unexpected(std::format(missingInvalidKeyFmt, kObjects));
 		}
 
+    // Material for the whole object
+    int materialIdx = -1;
+
+    if (object.HasMember("material_index")) {
+      materialIdx = object["material_index"].GetInt();
+    }
+
 		const auto& vertices = object[kVertices];
 
 		if (!vertices.IsArray() || vertices.Size() == 0 || vertices.Size() % 3 != 0) {
@@ -172,9 +223,6 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 			return std::unexpected(std::format(missingInvalidKeyFmt, kTriangles));
 		}
 
-		// TODO: Fake material for now.
-		Material material;
-		material.albedo = Vec3(1, 0, 0);
 		for (size_t i = 0; i < triangles.Size(); i += 3) {
 			const auto& vertex1Idx = triangles[i];
 
@@ -260,7 +308,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
       idxToVertex[vertex3Idx.GetInt()] = Vertex(vertex3Pos);
 
-      ParseTriangle pt{ vertex1Idx.GetInt(), vertex2Idx.GetInt(), vertex3Idx.GetInt() };
+      ParseTriangle pt{ vertex1Idx.GetInt(), vertex2Idx.GetInt(), vertex3Idx.GetInt(), materialIdx };
 
       parsedTriangles.push_back(pt);
 		}
@@ -288,7 +336,13 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
       Vertex& v2 = idxToVertex[triangle.v2];
       Vertex& v3 = idxToVertex[triangle.v3];
 
-		  sceneTriangles.emplace_back(v1, v2, v3, material);
+      if (triangle.matIdx > -1) {
+		    sceneTriangles.emplace_back(v1, v2, v3, sceneMaterials[triangle.matIdx]);
+
+      }
+      else {
+        sceneTriangles.emplace_back(v1, v2, v3, Material{});
+      }
     }
 
 	}

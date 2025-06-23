@@ -74,7 +74,7 @@ public:
 	std::vector<Triangle> triangles;
 	std::vector<Light> lights;
   Vec3 backgroundColor;
-  float shadowBias = 0.0005f;
+  float shadowBias = 0.0055f;
 };
 
 #endif // !SCENE_H

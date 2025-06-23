@@ -1,21 +1,17 @@
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#pragma once
 
 #include "calc/TypeDefs.h"
 
 enum class MaterialType {
   DIFFUSE,
   REFLECTIVE,
-  REFRACTIVE,
-  NONE // TODO: The default should be diffuse, why do we need None?
+  REFRACTIVE
 };
 
 // TODO: In our ray tracer, materials will be read-only so you can design it as immutable object.
 struct Material {
-  Vec3 albedo; ///< Natural color of the object/material.
-  MaterialType type = MaterialType::NONE;
+  Vec3 albedo = Vec3(1.0, 0.0f, 0.0f); ///< Natural color of the object/material.
+  MaterialType type = MaterialType::DIFFUSE;
   float ior = 1.0f;
   bool smoothShading = false;
 };
-
-#endif // !MATERIAL_H
