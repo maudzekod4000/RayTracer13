@@ -39,7 +39,9 @@ public:
 	}
 
 	inline Vec3 calculatePixelColor(const IntersectionData& intr) const {
-		return calculateDirectLight(intr);
+    Vec3 lightColor = calculateDirectLight(intr);
+    Vec3 materialColor = intr.material.albedo;
+    return materialColor * lightColor;
 	}
 
   inline Vec3 calculateDirectLight(const IntersectionData& intr) const {
