@@ -8,10 +8,9 @@ struct IntersectionData {
   Material material;
   Vec3 p{}; // TODO: Do we need to default initialize it?
   Vec3 pN{};
-  //Vec3 hitBaryCentricCoordinates{};
-  //Vec3 pNNonSmooth{};
   float t = 99999.9f;
   bool intersection = false;
+  Vec3 rayDir{};
 };
 
 #endif // !INTERSECTION_DATA_H

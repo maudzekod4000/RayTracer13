@@ -40,8 +40,13 @@ public:
 
 	inline Vec3 calculatePixelColor(const IntersectionData& intr) const {
     Vec3 lightColor = calculateDirectLight(intr);
-    Vec3 materialColor = intr.material.albedo;
-    return materialColor * lightColor;
+    if (intr.material.type == MaterialType::DIFFUSE) {
+      return intr.material.albedo * lightColor;
+    }
+    else if (intr.material.type == MaterialType::REFLECTIVE) {
+      return calculateReflection(intr) * lightColor;
+    }
+    return lightColor;
 	}
 
   inline Vec3 calculateDirectLight(const IntersectionData& intr) const {
@@ -73,10 +78,19 @@ public:
     return glm::clamp(finalColor, Vec3(0.0f), Vec3(1.0f));
   }
 
+  // Perfect mirror reflection. As if the ray hits not the mirror but the surface it reflects.
+  inline Vec3 calculateReflection(const IntersectionData& intr) const {
+    Vec3 reflectDir = glm::reflect(intr.rayDir, intr.pN);
+
+    Vec3 reflectionTraceColor = trace(Ray(intr.p, reflectDir));
+
+    return reflectionTraceColor;
+  }
+
 	std::vector<Triangle> triangles;
 	std::vector<Light> lights;
   Vec3 backgroundColor;
-  float shadowBias = 0.0055f;
+  float shadowBias = 0.0555f;
 };
 
 #endif // !SCENE_H

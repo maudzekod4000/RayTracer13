@@ -159,13 +159,13 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
         auto type = material[kType].GetString();
 
-        if (type == "diffuse") {
+        if (strcmp(type, "diffuse") == 0) {
           sceneMaterial.type = MaterialType::DIFFUSE;
         }
-        else if (type == "reflective") {
+        else if (strcmp(type, "reflective") == 0) {
           sceneMaterial.type = MaterialType::REFLECTIVE;
         }
-        else if (type == "refractive") {
+        else if (strcmp(type, "refractive") == 0) {
           sceneMaterial.type = MaterialType::REFRACTIVE;
         }
         else {
