@@ -47,7 +47,7 @@ public:
       return intr.material.albedo * lightColor;
     }
     else if (intr.material.type == MaterialType::REFLECTIVE) {
-      return calculateReflection(intr, depth) * lightColor;
+      return calculateReflection(intr.rayDir, intr.pN, intr.p, depth) * lightColor;
     }
     else if (intr.material.type == MaterialType::REFRACTIVE) {
       return calculateRefraction(intr, depth);
@@ -85,10 +85,10 @@ public:
   }
 
   // Perfect mirror reflection. As if the ray hits not the mirror but the surface it reflects.
-  inline Vec3 calculateReflection(const IntersectionData& intr, int depth) const {
-    Vec3 reflectDir = glm::reflect(intr.rayDir, intr.pN);
+  inline Vec3 calculateReflection(const Vec3& rayDir, const Vec3& n, const Vec3& p, int depth) const {
+    Vec3 reflectDir = glm::reflect(rayDir, n);
 
-    Vec3 reflectionTraceColor = trace(Ray(intr.p + intr.pN * shadowBias, reflectDir), depth + 1);
+    Vec3 reflectionTraceColor = trace(Ray(p + n * shadowBias, reflectDir), depth + 1);
 
     return reflectionTraceColor;
   }
@@ -106,7 +106,7 @@ public:
         std::swap(n1, n2);
       }
 
-      // Below, A is the incident angle and B is refraction angle
+      // Below, (cos/sin)A is the incident angle and (cos/sin)B is refraction angle
 
       // Cosine between the ray and surface normal
       float cosA = -glm::dot(intr.rayDir, surfaceNormal);
@@ -115,11 +115,7 @@ public:
       if ((n1 / n2) * sinA > 1.0f) {
         // Total reflection.
         // Send only a reflection ray
-        Vec3 reflectionDir = glm::reflect(intr.rayDir, surfaceNormal);
-
-        Vec3 reflectionColor = trace(Ray(intr.p + surfaceNormal * shadowBias, reflectionDir), depth + 1);
-
-        return reflectionColor;
+        return calculateReflection(intr.rayDir, surfaceNormal, intr.p, depth);
       }
       else {
         // Snells law: n1 * sin(incident) = n2 * sin(refraction)
@@ -148,10 +144,7 @@ public:
         Ray refractionRay(refractionRayOrigin, R);
 
         Vec3 refractionColor = trace(refractionRay, depth + 1);
-
-        Vec3 reflectionDir = glm::reflect(intr.rayDir, surfaceNormal);
-
-        Vec3 reflectionColor = trace(Ray(intr.p + surfaceNormal * shadowBias, reflectionDir), depth + 1);
+        Vec3 reflectionColor = calculateReflection(intr.rayDir, surfaceNormal, intr.p, depth + 1);
 
         float fresnel = 0.5f * powf(1.0f - cosA, 5.0f);
 
@@ -162,7 +155,7 @@ public:
 	std::vector<Triangle> triangles;
 	std::vector<Light> lights;
   Vec3 backgroundColor;
-  float shadowBias = 0.0555f;
+  float shadowBias = 0.0155f;
 };
 
 #endif // !SCENE_H
