@@ -68,8 +68,10 @@ public:
       IntersectionData shadowRayIntrs{};
 
       for (auto& triangle : triangles) {
-        if (triangle.intersect(shadowRay, shadowRayIntrs)) {
-          break;
+        if (triangle.material.type != MaterialType::REFRACTIVE) {
+          if (triangle.intersect(shadowRay, shadowRayIntrs)) {
+            break;
+          }
         }
       }
 
@@ -93,10 +95,11 @@ public:
     return reflectionTraceColor;
   }
 
+  // TODO: There is some shadow acne on the edges of the refraction.
   inline Vec3 calculateRefraction(const IntersectionData& intr, int depth) const {
       float n1 = 1.0f;
       float n2 = intr.material.ior;
-      Vec3 surfaceNormal = intr.pNN;
+      Vec3 surfaceNormal = intr.pNN; // TODO: For some reason only the non smooth refraction works.
       // Check if the incident ray leaves the transparent object.
       // The default is that it enters it.
       // If the direction of the ray is the same as the surface normal, then the ray must exit the object.
