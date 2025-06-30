@@ -49,7 +49,8 @@
 			"albedo": [
 				1, 1, 1
 			],
-			"smooth_shading": false
+			"smooth_shading": false,
+			"ior": 1.5
 		},
 		{
 			"type": "diffuse",

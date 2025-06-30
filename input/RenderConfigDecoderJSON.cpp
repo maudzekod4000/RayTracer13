@@ -167,6 +167,8 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
         }
         else if (strcmp(type, "refractive") == 0) {
           sceneMaterial.type = MaterialType::REFRACTIVE;
+
+          sceneMaterial.ior = material["ior"].GetFloat();
         }
         else {
           sceneMaterial.type = MaterialType::DIFFUSE;
@@ -176,11 +178,12 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
         sceneMaterial.smoothShading = isSmoothShading;
 
-        auto albedoVec = material[kAlbedo].GetArray();
-
-        sceneMaterial.albedo.x = albedoVec[0].GetFloat();
-        sceneMaterial.albedo.y = albedoVec[1].GetFloat();
-        sceneMaterial.albedo.z = albedoVec[2].GetFloat();
+        if (material.HasMember(kAlbedo)) {
+          auto albedoVec = material[kAlbedo].GetArray();
+          sceneMaterial.albedo.x = albedoVec[0].GetFloat();
+          sceneMaterial.albedo.y = albedoVec[1].GetFloat();
+          sceneMaterial.albedo.z = albedoVec[2].GetFloat();
+        }
 
         sceneMaterials.push_back(sceneMaterial);
       }
@@ -338,7 +341,6 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
       if (triangle.matIdx > -1) {
 		    sceneTriangles.emplace_back(v1, v2, v3, sceneMaterials[triangle.matIdx]);
-
       }
       else {
         sceneTriangles.emplace_back(v1, v2, v3, Material{});
