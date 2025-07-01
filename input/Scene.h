@@ -104,60 +104,45 @@ public:
       float n1 = 1.0f;
       float n2 = intr.material.ior;
       Vec3 surfaceNormal = intr.material.smoothShading ? intr.pN : intr.pNN;
-      // Check if the incident ray leaves the transparent object.
-      // The default is that it enters it.
-      // If the direction of the ray is the same as the surface normal, then the ray must exit the object.
-      if (glm::dot(intr.rayDir, surfaceNormal) > 0) {
-        // For the calculations we need the normal to be in the opposite direction to the ray.
+      Vec3 rayDir = glm::normalize(intr.rayDir);
+      bool inside = glm::dot(rayDir, surfaceNormal) > 0;
+
+      if (inside) {
         surfaceNormal = -surfaceNormal;
         std::swap(n1, n2);
       }
 
-      // Below, (cos/sin)A is the incident angle and (cos/sin)B is refraction angle
+      float etaiOverEtat = n1 / n2;
 
-      // Cosine between the ray and surface normal
-      float cosA = -glm::dot(intr.rayDir, surfaceNormal);
-      float sinA = sqrtf(1.0f - cosA * cosA);
+      float cosTheta = std::fminf(glm::dot(-rayDir, surfaceNormal), 1.0f);
+      Vec3 rOutPerp = etaiOverEtat * (rayDir + cosTheta * surfaceNormal);
+      Vec3 rOutParallel = -glm::sqrt(glm::abs(1.0f - glm::length(rOutPerp) * glm::length(rOutPerp))) * surfaceNormal;
+      Vec3 R = glm::normalize(rOutPerp + rOutParallel);
 
-      if ((n1 / n2) * sinA > 1.0f) {
-        // Total reflection.
-        // Send only a reflection ray
-        return calculateReflection(intr.rayDir, surfaceNormal, intr.p, depth);
+      float sinTheta = glm::sqrt(1.0f - cosTheta * cosTheta);
+
+      if (etaiOverEtat * sinTheta > 1.0f) {
+        return calculateReflection(rayDir, surfaceNormal, intr.p, depth);
       }
-      else {
-        // Snells law: n1 * sin(incident) = n2 * sin(refraction)
-        float sinB = sinA * (n1 / n2);
-        float cosB = sqrtf(1.0f - sinB * sinB);
 
-        // This is the shadow that the refraction ray throws on the normal
-        Vec3 A = cosB * -surfaceNormal;
+      float shlikApprox = reflectance(cosTheta, etaiOverEtat);
 
-        // This is the third side of the triangle between the incident ray
-        // and the normal. This is going to be perpentdicular to the normal.
-        Vec3 D = intr.rayDir + cosA * surfaceNormal;
+      Vec3 reflectionColor = calculateReflection(rayDir, surfaceNormal, intr.p, depth);
 
-        // We need a vector of length 1 so we can then compute the part of it which is
-        // 'seen' from sin of angle B
-        Vec3 C = glm::normalize(D);
+      Vec3 refractionOrigin(intr.p + (-surfaceNormal * refractionBias));
+      Ray refractionRay(refractionOrigin, R);
 
-        // The vector B is just part of the C vector
-        Vec3 B = C * sinB;
+      Vec3 refractionColor = trace(refractionRay, depth + 1);
 
-        // The resulting refraction direction is the third side of the triangle formed by A and B
-        Vec3 R = A + B;
-
-        // We need to move the start point of the ray beyond the border
-        Vec3 refractionRayOrigin = intr.p + (-surfaceNormal * refractionBias);
-        Ray refractionRay(refractionRayOrigin, R);
-
-        Vec3 refractionColor = trace(refractionRay, depth + 1);
-        Vec3 reflectionColor = calculateReflection(intr.rayDir, surfaceNormal, intr.p, depth + 1);
-
-        float fresnel = 0.5f * powf(1.0f - cosA, 5.0f);
-
-        return glm::mix(refractionColor, reflectionColor, fresnel);
-      }
+      return glm::mix(refractionColor, reflectionColor, shlikApprox);
   }
+
+  static double reflectance(double cosine, double refraction_index) {
+        // Use Schlick's approximation for reflectance.
+        auto r0 = (1 - refraction_index) / (1 + refraction_index);
+        r0 = r0*r0;
+        return r0 + (1-r0)*std::pow((1 - cosine),5);
+    }
 
 	std::vector<Triangle> triangles;
 	std::vector<Light> lights;
