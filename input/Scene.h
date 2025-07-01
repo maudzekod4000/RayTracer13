@@ -27,7 +27,7 @@ public:
 	Scene& operator=(const Scene&) = delete;
 
 	inline Vec3 trace(const Ray& ray, int depth = 0) const {
-    if (depth > 10) {
+    if (depth > maxDepth) {
       return backgroundColor;
     }
 		IntersectionData intr{};
@@ -88,9 +88,13 @@ public:
 
   // Perfect mirror reflection. As if the ray hits not the mirror but the surface it reflects.
   inline Vec3 calculateReflection(const Vec3& rayDir, const Vec3& n, const Vec3& p, int depth) const {
+    float projOfRayOnNegNormal = glm::dot(rayDir, -n);
+    float doubleProjNeg = -(2 * projOfRayOnNegNormal);
+    Vec3 scaledNormal = n * doubleProjNeg;
     Vec3 reflectDir = glm::reflect(rayDir, n);
+    //Vec3 reflectDir = rayDir - scaledNormal;
 
-    Vec3 reflectionTraceColor = trace(Ray(p + n * shadowBias, reflectDir), depth + 1);
+    Vec3 reflectionTraceColor = trace(Ray(p + n * reflectionBias, reflectDir), depth + 1);
 
     return reflectionTraceColor;
   }
@@ -99,7 +103,7 @@ public:
   inline Vec3 calculateRefraction(const IntersectionData& intr, int depth) const {
       float n1 = 1.0f;
       float n2 = intr.material.ior;
-      Vec3 surfaceNormal = intr.pNN; // TODO: For some reason only the non smooth refraction works.
+      Vec3 surfaceNormal = intr.material.smoothShading ? intr.pN : intr.pNN;
       // Check if the incident ray leaves the transparent object.
       // The default is that it enters it.
       // If the direction of the ray is the same as the surface normal, then the ray must exit the object.
@@ -143,7 +147,7 @@ public:
         Vec3 R = A + B;
 
         // We need to move the start point of the ray beyond the border
-        Vec3 refractionRayOrigin = intr.p + (-surfaceNormal * shadowBias);
+        Vec3 refractionRayOrigin = intr.p + (-surfaceNormal * refractionBias);
         Ray refractionRay(refractionRayOrigin, R);
 
         Vec3 refractionColor = trace(refractionRay, depth + 1);
@@ -159,6 +163,9 @@ public:
 	std::vector<Light> lights;
   Vec3 backgroundColor;
   float shadowBias = 0.0155f;
+  float reflectionBias = 0.0001f;
+  float refractionBias = 0.0001f;
+  const int maxDepth = 20;
 };
 
 #endif // !SCENE_H
