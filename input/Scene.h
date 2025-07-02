@@ -50,7 +50,7 @@ public:
       return calculateReflection(intr.rayDir, intr.pN, intr.p, depth) * lightColor;
     }
     else if (intr.material.type == MaterialType::REFRACTIVE) {
-      return calculateRefraction(intr, depth);
+      return calculateRefraction(intr, depth) * lightColor;
     }
     return lightColor;
 	}
