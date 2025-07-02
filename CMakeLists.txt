@@ -17,14 +17,10 @@ add_executable(RayTracer13
 	output/ppm/PPMImageWriter.cpp
 	sampling/Ray.h
 	sampling/Camera.h
-	sampling/Camera.cpp
 	sampling/Vertex.h
 	sampling/Triangle.h
-	sampling/Triangle.cpp
 	sampling/Ray.h
 	sampling/IntersectionData.h
-	sampling/Object.h
-	sampling/Object.cpp
 	sampling/Material.h
 	input/RenderConfigDecoder.h
 	input/CameraSettings.h
@@ -32,9 +28,7 @@ add_executable(RayTracer13
 	input/ImageSettings.h
 	input/ImageSettings.cpp
 	input/Settings.h
-	input/Settings.cpp
 	input/Scene.h
-	input/Scene.cpp
 	input/RenderConfigDecoderJSON.h
 	input/RenderConfigDecoderJSON.cpp
 	input/FileReader.h

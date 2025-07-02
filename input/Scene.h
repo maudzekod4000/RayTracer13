@@ -104,45 +104,44 @@ public:
       float n1 = 1.0f;
       float n2 = intr.material.ior;
       Vec3 surfaceNormal = intr.material.smoothShading ? intr.pN : intr.pNN;
-      Vec3 rayDir = glm::normalize(intr.rayDir);
-      bool inside = glm::dot(rayDir, surfaceNormal) > 0;
+      const Vec3 rayDir = glm::normalize(intr.rayDir);
+      const bool inside = glm::dot(rayDir, surfaceNormal) > 0;
 
       if (inside) {
         surfaceNormal = -surfaceNormal;
         std::swap(n1, n2);
       }
 
-      float etaiOverEtat = n1 / n2;
-
-      float cosTheta = std::fminf(glm::dot(-rayDir, surfaceNormal), 1.0f);
-      Vec3 rOutPerp = etaiOverEtat * (rayDir + cosTheta * surfaceNormal);
-      Vec3 rOutParallel = -glm::sqrt(glm::abs(1.0f - glm::length(rOutPerp) * glm::length(rOutPerp))) * surfaceNormal;
-      Vec3 R = glm::normalize(rOutPerp + rOutParallel);
-
-      float sinTheta = glm::sqrt(1.0f - cosTheta * cosTheta);
+      const float etaiOverEtat = n1 / n2;
+      const float cosTheta = glm::dot(-rayDir, surfaceNormal);
+      const float sinTheta = glm::sqrt(1.0f - cosTheta * cosTheta);
 
       if (etaiOverEtat * sinTheta > 1.0f) {
         return calculateReflection(rayDir, surfaceNormal, intr.p, depth);
       }
 
-      float shlikApprox = reflectance(cosTheta, etaiOverEtat);
+      //Vec3 rOutPerp = etaiOverEtat * (rayDir + cosTheta * surfaceNormal);
+      //Vec3 rOutParallel = -glm::sqrt(glm::abs(1.0f - glm::length(rOutPerp) * glm::length(rOutPerp))) * surfaceNormal;
+      //Vec3 R = glm::normalize(rOutPerp + rOutParallel);
+      const Vec3 R = glm::refract(rayDir, surfaceNormal, etaiOverEtat);
+      const float shlikApprox = calculateReflectance(cosTheta, etaiOverEtat);
 
-      Vec3 reflectionColor = calculateReflection(rayDir, surfaceNormal, intr.p, depth);
+      const Vec3 reflectionColor = calculateReflection(rayDir, surfaceNormal, intr.p, depth);
 
-      Vec3 refractionOrigin(intr.p + (-surfaceNormal * refractionBias));
-      Ray refractionRay(refractionOrigin, R);
+      const Vec3 refractionOrigin(intr.p + (-surfaceNormal * refractionBias));
+      const Ray refractionRay(refractionOrigin, R);
 
-      Vec3 refractionColor = trace(refractionRay, depth + 1);
+      const Vec3 refractionColor = trace(refractionRay, depth + 1);
 
       return glm::mix(refractionColor, reflectionColor, shlikApprox);
   }
 
-  static double reflectance(double cosine, double refraction_index) {
-        // Use Schlick's approximation for reflectance.
-        auto r0 = (1 - refraction_index) / (1 + refraction_index);
-        r0 = r0*r0;
-        return r0 + (1-r0)*std::pow((1 - cosine),5);
-    }
+  // Use Schlick's approximation for reflectance.
+  inline float calculateReflectance(float cosine, float etaiOverEtat) const {
+    float r0 = (1.0f - etaiOverEtat) / (1.0f + etaiOverEtat);
+    r0 = r0 * r0;
+    return r0 + (1.0f - r0) * glm::pow((1.0f - cosine), 5.0f);
+  }
 
 	std::vector<Triangle> triangles;
 	std::vector<Light> lights;
@@ -150,7 +149,7 @@ public:
   float shadowBias = 0.0155f;
   float reflectionBias = 0.0001f;
   float refractionBias = 0.0001f;
-  const int maxDepth = 20;
+  const int maxDepth = 16;
 };
 
 #endif // !SCENE_H
