@@ -171,12 +171,14 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
           sceneMaterial.ior = material["ior"].GetFloat();
         }
         else {
-          sceneMaterial.type = MaterialType::DIFFUSE;
+          sceneMaterial.type = MaterialType::CONSTANT;
         }
 
         auto isSmoothShading = material["smooth_shading"].GetBool();
 
         sceneMaterial.smoothShading = isSmoothShading;
+
+        sceneMaterial.backFaceCulling = material.HasMember("back_face_culling") ? material["back_face_culling"].GetBool() : false;
 
         if (material.HasMember(kAlbedo)) {
           auto albedoVec = material[kAlbedo].GetArray();

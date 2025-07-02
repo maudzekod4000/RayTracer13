@@ -30,7 +30,7 @@ struct Triangle {
 	inline bool intersect(const Ray& ray, IntersectionData& intersectionData) const {
 		// The projection of the ray direction onto the normal of the triangle
 		// is the length from the ray origin to the traingle plane.
-		const float t = glm::dot(this->a.pos - ray.origin, n) / glm::dot(ray.dir, n);
+    const float t = glm::dot(this->a.pos - ray.origin, n) / glm::dot(ray.dir, n);
 
 		if (t > intersectionData.t || t <= 0.0f) {
 			return false;

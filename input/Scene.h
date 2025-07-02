@@ -42,17 +42,23 @@ public:
 	}
 
 	inline Vec3 calculatePixelColor(const IntersectionData& intr, int depth) const {
-    Vec3 lightColor = calculateDirectLight(intr);
     if (intr.material.type == MaterialType::DIFFUSE) {
+      const Vec3 lightColor = calculateDirectLight(intr);
       return intr.material.albedo * lightColor;
     }
     else if (intr.material.type == MaterialType::REFLECTIVE) {
+      const Vec3 lightColor = calculateDirectLight(intr);
       return calculateReflection(intr.rayDir, intr.pN, intr.p, depth) * lightColor;
     }
     else if (intr.material.type == MaterialType::REFRACTIVE) {
-      return calculateRefraction(intr, depth) * lightColor;
+      return calculateRefraction(intr, depth);
     }
-    return lightColor;
+    else if (intr.material.type == MaterialType::CONSTANT) {
+      return intr.material.albedo;
+    }
+    else {
+      return intr.material.albedo;
+    }
 	}
 
   inline Vec3 calculateDirectLight(const IntersectionData& intr) const {
@@ -88,9 +94,9 @@ public:
 
   // Perfect mirror reflection. As if the ray hits not the mirror but the surface it reflects.
   inline Vec3 calculateReflection(const Vec3& rayDir, const Vec3& n, const Vec3& p, int depth) const {
-    float projOfRayOnNegNormal = glm::dot(rayDir, -n);
-    float doubleProjNeg = -(2 * projOfRayOnNegNormal);
-    Vec3 scaledNormal = n * doubleProjNeg;
+    //float projOfRayOnNegNormal = glm::dot(rayDir, -n);
+    //float doubleProjNeg = -(2 * projOfRayOnNegNormal);
+    //Vec3 scaledNormal = n * doubleProjNeg;
     Vec3 reflectDir = glm::reflect(rayDir, n);
     //Vec3 reflectDir = rayDir - scaledNormal;
 
@@ -146,7 +152,7 @@ public:
 	std::vector<Triangle> triangles;
 	std::vector<Light> lights;
   Vec3 backgroundColor;
-  float shadowBias = 0.0155f;
+  float shadowBias = 0.0055f;
   float reflectionBias = 0.0001f;
   float refractionBias = 0.0001f;
   const int maxDepth = 16;

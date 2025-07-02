@@ -5,7 +5,8 @@
 enum class MaterialType {
   DIFFUSE,
   REFLECTIVE,
-  REFRACTIVE
+  REFRACTIVE,
+  CONSTANT
 };
 
 struct Material {
@@ -13,4 +14,5 @@ struct Material {
   MaterialType type = MaterialType::DIFFUSE;
   float ior = 1.0f;
   bool smoothShading = false;
+  bool backFaceCulling = false;
 };

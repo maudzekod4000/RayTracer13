@@ -8,7 +8,7 @@ struct IntersectionData {
   Material material;
   Vec3 p{};
   Vec3 pN{}; /// Smooth normal
-  Vec3 pNN{}; /// Not smooth normal
+  Vec3 pNN{}; /// Non-smooth normal
   float t = 99999.9f;
   bool intersection = false;
   Vec3 rayDir{};

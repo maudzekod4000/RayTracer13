@@ -21,7 +21,7 @@ constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
   // Read the scene file
-  const auto fileContentExp = FileReader::readFile("../scenes/shading-2/scene6.crtscene");
+  const auto fileContentExp = FileReader::readFile("../scenes/shading-2/scene7.crtscene");
 
   if (!fileContentExp.has_value()) {
     std::cerr << fileContentExp.error() << std::endl;
