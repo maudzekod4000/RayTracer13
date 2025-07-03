@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <algorithm>
+#include <execution>
+#include <ranges>
 
 #include "output/ppm/PPMImageMeta.h"
 #include "output/ppm/PPMImage.h"
@@ -21,7 +24,7 @@ constexpr uint16_t MAX_COLOR = 255;
 
 int main() {
   // Read the scene file
-  const auto fileContentExp = FileReader::readFile("../scenes/shading-2/scene7.crtscene");
+  const auto fileContentExp = FileReader::readFile("../scenes/shading-2/scene8.crtscene");
 
   if (!fileContentExp.has_value()) {
     std::cerr << fileContentExp.error() << std::endl;
@@ -47,16 +50,14 @@ int main() {
 
   std::cout << "Begin rendering..." << std::endl;
 
-  // TODO: It would be cool to have separate projects for outputting images, sampling,
-  // optim. algorithms, multithreading etc.
-
-  for (uint16_t i = 0; i < width; i++) {
+  auto rowRange = std::views::iota(0, int(width));
+  std::for_each(std::execution::par, rowRange.begin(), rowRange.end(), [&](int i) {
     for (uint16_t j = 0; j < height; j++) {
       const Ray r = camera.generateRay(i, j);
       Vec3 color = renderConfig.scene.trace(r);
       image.writePixel(j, i, PPMColor(static_cast<uint16_t>(color.r * MAX_COLOR), static_cast<uint16_t>(color.g * MAX_COLOR), static_cast<uint16_t>(color.b * MAX_COLOR)));
     }
-  }
+  });
 
   std::cout << "Rendering done..." << std::endl;
 
