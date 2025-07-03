@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <math.h>
+#include <random>
 
 #include "sampling/Triangle.h"
 #include "sampling/IntersectionData.h"
@@ -44,7 +45,7 @@ public:
 	inline Vec3 calculatePixelColor(const IntersectionData& intr, int depth) const {
     if (intr.material.type == MaterialType::DIFFUSE) {
       const Vec3 lightColor = calculateDirectLight(intr);
-      return intr.material.albedo * lightColor;
+      return intr.material.albedo * lightColor + calculateDiffuse(intr, depth);
     }
     else if (intr.material.type == MaterialType::REFLECTIVE) {
       const Vec3 lightColor = calculateDirectLight(intr);
@@ -131,6 +132,57 @@ public:
       return glm::mix(refractionColor, reflectionColor, shlikApprox);
   }
 
+  inline Vec3 calculateDiffuse(const IntersectionData& intr, int depth) const {
+    Vec3 diffReflColor(0.0f);
+    Vec3 n = intr.material.smoothShading ? intr.pN : intr.pNN;
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+    for (size_t i = 0; i < diffuseReflCount; i++) {
+      Vec3 rightAxis = glm::normalize(glm::cross(intr.rayDir, n));
+      Vec3 upAxis = n;
+      Vec3 forwardAxis = glm::normalize(glm::cross(rightAxis, upAxis));
+
+      glm::mat3x3 localHitMatrix(1.0f);
+      localHitMatrix[0] = rightAxis;
+      localHitMatrix[1] = forwardAxis;
+      localHitMatrix[2] = upAxis;
+
+      // Generate random angle in the XY plane
+      float randAngleInXY = M_PI * dist(rng);
+      // Construct random vector in the XY plane
+      Vec3 randVecXY = Vec3(cos(randAngleInXY), sin(randAngleInXY), 0);
+
+      // Generate random angle in the XZ plane
+      float randAngleINXZ = M_PI * 2 * dist(rng);
+      glm::mat3x3 rotMatY(1.0f);
+      rotMatY[0][0] = cos(randAngleINXZ);
+      rotMatY[2][0] = -sin(randAngleINXZ);
+      rotMatY[0][2] = sin(randAngleINXZ);
+      rotMatY[2][2] = cos(randAngleINXZ);
+
+      Vec3 randVecInXYRotated = randVecXY * rotMatY;
+
+      Vec3 diffReflRayDir = randVecInXYRotated * localHitMatrix;
+      Vec3 diffRayOrigin = intr.p + (n * reflectionBias);
+      Ray diffRay(diffRayOrigin, diffReflRayDir);
+
+      diffReflColor = diffReflColor + trace(diffRay, depth + 1);
+    }
+
+    return diffReflColor / (float)(diffuseReflCount + 1);
+  }
+
+	std::vector<Triangle> triangles;
+	std::vector<Light> lights;
+  Vec3 backgroundColor;
+  const float shadowBias = 0.0055f;
+  const float reflectionBias = 0.0001f;
+  const float refractionBias = 0.0001f;
+  const int maxDepth = 8;
+  const int diffuseReflCount = 1;
+
+private:
   /// Use Schlick's approximation for reflectance.
   /// It tells us how much of the light is reflected.
   inline float calculateReflectance(float cosine, float etaiOverEtat) const {
@@ -138,14 +190,6 @@ public:
     r0 = r0 * r0;
     return r0 + (1.0f - r0) * glm::pow((1.0f - cosine), 5.0f);
   }
-
-	std::vector<Triangle> triangles;
-	std::vector<Light> lights;
-  Vec3 backgroundColor;
-  float shadowBias = 0.0055f;
-  float reflectionBias = 0.0001f;
-  float refractionBias = 0.0001f;
-  const int maxDepth = 16;
 };
 
 #endif // !SCENE_H
