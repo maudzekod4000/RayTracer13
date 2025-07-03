@@ -94,15 +94,7 @@ public:
 
   // Perfect mirror reflection. As if the ray hits not the mirror but the surface it reflects.
   inline Vec3 calculateReflection(const Vec3& rayDir, const Vec3& n, const Vec3& p, int depth) const {
-    //float projOfRayOnNegNormal = glm::dot(rayDir, -n);
-    //float doubleProjNeg = -(2 * projOfRayOnNegNormal);
-    //Vec3 scaledNormal = n * doubleProjNeg;
-    Vec3 reflectDir = glm::reflect(rayDir, n);
-    //Vec3 reflectDir = rayDir - scaledNormal;
-
-    Vec3 reflectionTraceColor = trace(Ray(p + n * reflectionBias, reflectDir), depth + 1);
-
-    return reflectionTraceColor;
+    return trace(Ray(p + n * reflectionBias, glm::reflect(rayDir, n)), depth + 1);
   }
 
   // TODO: There is some shadow acne on the edges of the refraction.
@@ -118,19 +110,16 @@ public:
         std::swap(n1, n2);
       }
 
-      const float etaiOverEtat = n1 / n2;
+      const float iorRatio = n1 / n2;
       const float cosTheta = glm::dot(-rayDir, surfaceNormal);
       const float sinTheta = glm::sqrt(1.0f - cosTheta * cosTheta);
 
-      if (etaiOverEtat * sinTheta > 1.0f) {
+      if (iorRatio * sinTheta > 1.0f) {
         return calculateReflection(rayDir, surfaceNormal, intr.p, depth);
       }
 
-      //Vec3 rOutPerp = etaiOverEtat * (rayDir + cosTheta * surfaceNormal);
-      //Vec3 rOutParallel = -glm::sqrt(glm::abs(1.0f - glm::length(rOutPerp) * glm::length(rOutPerp))) * surfaceNormal;
-      //Vec3 R = glm::normalize(rOutPerp + rOutParallel);
-      const Vec3 R = glm::refract(rayDir, surfaceNormal, etaiOverEtat);
-      const float shlikApprox = calculateReflectance(cosTheta, etaiOverEtat);
+      const Vec3 R = glm::refract(rayDir, surfaceNormal, iorRatio);
+      const float shlikApprox = calculateReflectance(cosTheta, iorRatio);
 
       const Vec3 reflectionColor = calculateReflection(rayDir, surfaceNormal, intr.p, depth);
 
@@ -142,7 +131,8 @@ public:
       return glm::mix(refractionColor, reflectionColor, shlikApprox);
   }
 
-  // Use Schlick's approximation for reflectance.
+  /// Use Schlick's approximation for reflectance.
+  /// It tells us how much of the light is reflected.
   inline float calculateReflectance(float cosine, float etaiOverEtat) const {
     float r0 = (1.0f - etaiOverEtat) / (1.0f + etaiOverEtat);
     r0 = r0 * r0;
