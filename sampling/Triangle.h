@@ -53,7 +53,7 @@ struct Triangle {
 		intersectionData.p = p;
 		intersectionData.intersection = true;
     intersectionData.material = material;
-    intersectionData.rayDir = ray.dir;
+    intersectionData.ray = ray;
     intersectionData.pNN = n;
 
     float areaM = glm::length(glm::cross(p - a.pos, c.pos - a.pos)) / 2.0f;

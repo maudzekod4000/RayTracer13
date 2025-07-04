@@ -27,8 +27,8 @@ public:
 	Scene(const Scene&) = delete;
 	Scene& operator=(const Scene&) = delete;
 
-	inline Vec3 trace(const Ray& ray, int depth = 0) const {
-    if (depth > maxDepth) {
+	inline Vec3 trace(const Ray& ray) const {
+    if (ray.bounceCount > ray.maxBounces) {
       return backgroundColor;
     }
 		IntersectionData intr{};
@@ -38,21 +38,22 @@ public:
 		}
 
     return intr.intersection ?
-      calculatePixelColor(intr, depth) :
+      calculatePixelColor(intr) :
       backgroundColor;
 	}
 
-	inline Vec3 calculatePixelColor(const IntersectionData& intr, int depth) const {
+	inline Vec3 calculatePixelColor(const IntersectionData& intr) const {
     if (intr.material.type == MaterialType::DIFFUSE) {
-      const Vec3 lightColor = calculateDirectLight(intr);
-      return intr.material.albedo * lightColor + calculateDiffuse(intr, depth);
+      const Vec3 directLight = calculateDirectLight(intr);
+      const Vec3 indirectLight = calculateDiffuse(intr);
+      return intr.material.albedo * (directLight + indirectLight);
     }
     else if (intr.material.type == MaterialType::REFLECTIVE) {
       const Vec3 lightColor = calculateDirectLight(intr);
-      return calculateReflection(intr.rayDir, intr.pN, intr.p, depth) * lightColor;
+      return calculateReflection(intr.ray, intr.pN, intr.p) * lightColor;
     }
     else if (intr.material.type == MaterialType::REFRACTIVE) {
-      return calculateRefraction(intr, depth);
+      return calculateRefraction(intr);
     }
     else if (intr.material.type == MaterialType::CONSTANT) {
       return intr.material.albedo;
@@ -94,16 +95,16 @@ public:
   }
 
   // Perfect mirror reflection. As if the ray hits not the mirror but the surface it reflects.
-  inline Vec3 calculateReflection(const Vec3& rayDir, const Vec3& n, const Vec3& p, int depth) const {
-    return trace(Ray(p + n * reflectionBias, glm::reflect(rayDir, n)), depth + 1);
+  inline Vec3 calculateReflection(const Ray& ray, const Vec3& n, const Vec3& p) const {
+    return trace(Ray(p + n * reflectionBias, glm::reflect(ray.dir, n)));
   }
 
   // TODO: There is some shadow acne on the edges of the refraction.
-  inline Vec3 calculateRefraction(const IntersectionData& intr, int depth) const {
+  inline Vec3 calculateRefraction(const IntersectionData& intr) const {
       float n1 = 1.0f;
       float n2 = intr.material.ior;
       Vec3 surfaceNormal = intr.material.smoothShading ? intr.pN : intr.pNN;
-      const Vec3 rayDir = glm::normalize(intr.rayDir);
+      const Vec3 rayDir = intr.ray.dir;
       const bool inside = glm::dot(rayDir, surfaceNormal) > 0;
 
       if (inside) {
@@ -116,30 +117,30 @@ public:
       const float sinTheta = glm::sqrt(1.0f - cosTheta * cosTheta);
 
       if (iorRatio * sinTheta > 1.0f) {
-        return calculateReflection(rayDir, surfaceNormal, intr.p, depth);
+        return calculateReflection(intr.ray, surfaceNormal, intr.p);
       }
 
       const Vec3 R = glm::refract(rayDir, surfaceNormal, iorRatio);
       const float shlikApprox = calculateReflectance(cosTheta, iorRatio);
 
-      const Vec3 reflectionColor = calculateReflection(rayDir, surfaceNormal, intr.p, depth);
+      const Vec3 reflectionColor = calculateReflection(intr.ray, surfaceNormal, intr.p);
 
       const Vec3 refractionOrigin(intr.p + (-surfaceNormal * refractionBias));
       const Ray refractionRay(refractionOrigin, R);
 
-      const Vec3 refractionColor = trace(refractionRay, depth + 1);
+      const Vec3 refractionColor = trace(refractionRay);
 
       return glm::mix(refractionColor, reflectionColor, shlikApprox);
   }
 
-  inline Vec3 calculateDiffuse(const IntersectionData& intr, int depth) const {
+  inline Vec3 calculateDiffuse(const IntersectionData& intr) const {
     Vec3 diffReflColor(0.0f);
     Vec3 n = intr.material.smoothShading ? intr.pN : intr.pNN;
     std::mt19937 rng(std::random_device{}());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    for (size_t i = 0; i < diffuseReflCount; i++) {
-      Vec3 rightAxis = glm::normalize(glm::cross(intr.rayDir, n));
+    for (size_t i = 0; i < giRaysCount; i++) {
+      Vec3 rightAxis = glm::normalize(glm::cross(intr.ray.dir, n));
       Vec3 upAxis = n;
       Vec3 forwardAxis = glm::normalize(glm::cross(rightAxis, upAxis));
 
@@ -166,11 +167,15 @@ public:
       Vec3 diffReflRayDir = randVecInXYRotated * localHitMatrix;
       Vec3 diffRayOrigin = intr.p + (n * reflectionBias);
       Ray diffRay(diffRayOrigin, diffReflRayDir);
-
-      diffReflColor = diffReflColor + trace(diffRay, depth + 1);
+      // Hm very interesting problem with the ray bounces.
+      // Maybe if we have two types of rays: original and GI.
+      // then we can say:
+      // ok, is that a GI ray? lets continue it by adding to its depth.
+      // is it a original ray? start a new GI ray from it with depth 0.
+      diffReflColor = diffReflColor + trace(diffRay);
     }
 
-    return diffReflColor / (float)(diffuseReflCount + 1);
+    return diffReflColor / (float)giRaysCount;
   }
 
 	std::vector<Triangle> triangles;
@@ -179,8 +184,8 @@ public:
   const float shadowBias = 0.0055f;
   const float reflectionBias = 0.0001f;
   const float refractionBias = 0.0001f;
-  const int maxDepth = 8;
-  const int diffuseReflCount = 1;
+  const int giRaysCount = 8;
+  const int giRaysMaxDepth = 2;
 
 private:
   /// Use Schlick's approximation for reflectance.
