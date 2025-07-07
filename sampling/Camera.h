@@ -77,7 +77,7 @@ struct Camera {
 
     const Vec3 rayDir(x, y, focalDist);
 
-    return Ray(pos, glm::normalize(applyTransformation(rayDir)), 0, maxRayBounces);
+    return Ray(pos, glm::normalize(applyTransformation(rayDir)));
 }
 
 private:

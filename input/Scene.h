@@ -28,8 +28,15 @@ public:
 	Scene& operator=(const Scene&) = delete;
 
 	inline Vec3 trace(const Ray& ray) const {
-    if (ray.bounceCount > ray.maxBounces) {
-      return backgroundColor;
+    if (ray.type == RayType::CAMERA) {
+      if (ray.bounceCount > cameraRaysMaxDepth) {
+        return backgroundColor;
+      }
+    }
+    else if (ray.type == RayType::GI) {
+      if (ray.bounceCount > giRaysMaxDepth) {
+        return backgroundColor;
+      }
     }
 		IntersectionData intr{};
 
@@ -46,7 +53,8 @@ public:
     if (intr.material.type == MaterialType::DIFFUSE) {
       const Vec3 directLight = calculateDirectLight(intr);
       const Vec3 indirectLight = calculateDiffuse(intr);
-      return intr.material.albedo * (directLight + indirectLight);
+      const Vec3 totalLight = glm::clamp(directLight + indirectLight, 0.0f, 1.0f);
+      return intr.material.albedo * totalLight;
     }
     else if (intr.material.type == MaterialType::REFLECTIVE) {
       const Vec3 lightColor = calculateDirectLight(intr);
@@ -96,7 +104,7 @@ public:
 
   // Perfect mirror reflection. As if the ray hits not the mirror but the surface it reflects.
   inline Vec3 calculateReflection(const Ray& ray, const Vec3& n, const Vec3& p) const {
-    return trace(Ray(p + n * reflectionBias, glm::reflect(ray.dir, n)));
+    return trace(Ray(p + n * reflectionBias, glm::reflect(ray.dir, n), ray.bounceCount + 1, ray.type));
   }
 
   // TODO: There is some shadow acne on the edges of the refraction.
@@ -126,7 +134,7 @@ public:
       const Vec3 reflectionColor = calculateReflection(intr.ray, surfaceNormal, intr.p);
 
       const Vec3 refractionOrigin(intr.p + (-surfaceNormal * refractionBias));
-      const Ray refractionRay(refractionOrigin, R);
+      const Ray refractionRay(refractionOrigin, R, intr.ray.bounceCount + 1, intr.ray.type);
 
       const Vec3 refractionColor = trace(refractionRay);
 
@@ -166,13 +174,18 @@ public:
 
       Vec3 diffReflRayDir = randVecInXYRotated * localHitMatrix;
       Vec3 diffRayOrigin = intr.p + (n * reflectionBias);
-      Ray diffRay(diffRayOrigin, diffReflRayDir);
-      // Hm very interesting problem with the ray bounces.
-      // Maybe if we have two types of rays: original and GI.
-      // then we can say:
-      // ok, is that a GI ray? lets continue it by adding to its depth.
-      // is it a original ray? start a new GI ray from it with depth 0.
-      diffReflColor = diffReflColor + trace(diffRay);
+
+      if (intr.ray.type == RayType::CAMERA) {
+        // This is the first camera ray that hit the surface, now we initiate GI rays.
+        Ray diffRay(diffRayOrigin, diffReflRayDir, 0, RayType::GI);
+        diffReflColor = diffReflColor + trace(diffRay);
+      }
+      else if (intr.ray.type == RayType::GI) {
+        // Continue shooting GI rays
+        Ray diffRay(diffRayOrigin, diffReflRayDir, intr.ray.bounceCount + 1, RayType::GI);
+        diffReflColor = diffReflColor + trace(diffRay);
+      }
+
     }
 
     return diffReflColor / (float)giRaysCount;
@@ -184,8 +197,9 @@ public:
   const float shadowBias = 0.0055f;
   const float reflectionBias = 0.0001f;
   const float refractionBias = 0.0001f;
-  const int giRaysCount = 8;
+  const int giRaysCount = 10;
   const int giRaysMaxDepth = 2;
+  const int cameraRaysMaxDepth = 4;
 
 private:
   /// Use Schlick's approximation for reflectance.
