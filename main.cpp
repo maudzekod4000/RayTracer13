@@ -49,12 +49,25 @@ int main() {
 
   std::cout << "Begin rendering..." << std::endl;
 
+  constexpr int AA = 4; // Antialiasing multiplier: x2, x4, x8
+  constexpr float offset = 1.0f / (AA + 1);
+  constexpr int samplesCount = AA * AA;
+
   auto rowRange = std::views::iota(0, int(width));
   std::for_each(std::execution::par, rowRange.begin(), rowRange.end(), [&](int i) {
     for (uint16_t j = 0; j < height; j++) {
-      const Ray r = camera.generateRay(i, j);
-      Vec3 color = renderConfig.scene.trace(r);
-      image.writePixel(j, i, PPMColor(static_cast<uint16_t>(color.r * MAX_COLOR), static_cast<uint16_t>(color.g * MAX_COLOR), static_cast<uint16_t>(color.b * MAX_COLOR)));
+      // Simple anti aliasing
+      Vec3 averagedColor(0);
+      for (int waa = 1; waa <= AA; waa++) {
+        for (int haa = 1; haa <= AA; haa++) {
+          float currentOffset = haa * offset;
+          const Ray r = camera.generateRay(i + currentOffset, j + currentOffset);
+          averagedColor += renderConfig.scene.trace(r);
+        }
+      }
+      averagedColor /= samplesCount;
+      averagedColor = glm::clamp(averagedColor, 0.0f, 1.0f);
+      image.writePixel(j, i, PPMColor(static_cast<uint16_t>(averagedColor.r * MAX_COLOR), static_cast<uint16_t>(averagedColor.g * MAX_COLOR), static_cast<uint16_t>(averagedColor.b * MAX_COLOR)));
     }
   });
 

@@ -60,10 +60,6 @@ struct Camera {
   /// @param y Column index of the pixel.
   /// @return A Ray from the camera pinhole to the pixel's center.
   inline Ray generateRay(float x, float y) const {
-    /* Sample the pixel at its center */
-    x += 0.5f;
-    y += 0.5f;
-
     /* Transform to NDC: 0.0 - 1.0 */
     x /= halfSensorW;
     y /= halfSensorH;

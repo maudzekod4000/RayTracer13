@@ -197,9 +197,9 @@ public:
   const float shadowBias = 0.0055f;
   const float reflectionBias = 0.0001f;
   const float refractionBias = 0.0001f;
-  const int giRaysCount = 10;
+  const int giRaysCount = 1;
   const int giRaysMaxDepth = 2;
-  const int cameraRaysMaxDepth = 4;
+  const int cameraRaysMaxDepth = 3;
 
 private:
   /// Use Schlick's approximation for reflectance.
