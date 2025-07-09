@@ -22,6 +22,8 @@ add_executable(RayTracer13
 	sampling/Ray.h
 	sampling/IntersectionData.h
 	sampling/Material.h
+  sampling/AABB.h
+  sampling/AABBTree.h
 	input/RenderConfigDecoder.h
 	input/CameraSettings.h
 	input/CameraSettings.cpp
