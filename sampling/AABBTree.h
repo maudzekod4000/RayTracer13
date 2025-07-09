@@ -30,12 +30,15 @@ struct AABBTree {
 	inline AABBTree(const std::vector<Triangle>& triangles) {
 		std::cout << "Building optimisation structure...\n";
 		AABB aabb;
+    for (const Triangle& triangle : triangles) {
+      aabb.expand(triangle);
+    }
 		buildTree(triangles, aabb, 0, -1, -1, 0);
 
 		std::cout << "Done building optimisation structure...\n";
 	}
 
-	inline IntersectionData intersectAABBTree(const Ray& ray) {
+	inline IntersectionData intersectAABBTree(const Ray& ray) const {
 		std::vector<Node> boxStack;
 		boxStack.reserve(maxDepth + 1);
 
@@ -67,18 +70,17 @@ struct AABBTree {
 private:
 	std::vector<Node> nodes;
 	int32_t leafSize = 1;
-	std::vector<Material> materialMap;
-	int32_t maxDepth = 12;
+	int32_t maxDepth = 14;
 
 	inline void buildTree(const std::vector<Triangle>& tris, AABB& box, int component, int parentIdx, int child, int depth) {
 		std::vector<Triangle> triangles;
 
 		// Add the triangles that have intersection with the box
-			for (const Triangle& tri : tris) {
-				if (box.intersect(tri)) {
-					triangles.push_back(tri);
-				}
+		for (const Triangle& tri : tris) {
+			if (box.intersect(tri)) {
+				triangles.push_back(tri);
 			}
+		}
 
 		int idx = nodes.size();
 

@@ -9,6 +9,7 @@
 
 #include "sampling/Vertex.h"
 #include "sampling/Light.h"
+#include "sampling/AABBTree.h"
 
 constexpr char missingInvalidKeyFmt[] = "Missing or invalid type for key '{}'";
 constexpr char sizeMismatchFmt[] = "Unexpected element count of {} when {} is required for key '{}'";
@@ -392,7 +393,8 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 	CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
 	ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
 	Settings s(backgroundColor);
-	Scene sc(std::move(sceneTriangles), std::move(sceneLights), backgroundColor);
+  AABBTree octTree(sceneTriangles);  
+	Scene sc(std::move(octTree), std::move(sceneLights), backgroundColor);
 
 	return RenderConfig(std::move(cs), std::move(s), std::move(is), std::move(sc));
 }

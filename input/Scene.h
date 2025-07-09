@@ -12,10 +12,11 @@
 #include "calc/TypeDefs.h"
 #include "sampling/Material.h"
 #include "sampling/Light.h"
+#include "sampling/AABBTree.h"
 
 class Scene {
 public:
-	inline Scene(std::vector<Triangle>&& t, std::vector<Light>&& l, const Vec3& background):
+	explicit inline Scene(AABBTree&& t, std::vector<Light>&& l, const Vec3& background):
 		triangles(std::move(t)),
 		lights(std::move(l)),
     backgroundColor(background)
@@ -38,11 +39,7 @@ public:
         return backgroundColor;
       }
     }
-		IntersectionData intr{};
-
-		for (auto& triangle : triangles) {
-			triangle.intersect(ray, intr);
-		}
+		IntersectionData intr = triangles.intersectAABBTree(ray);
 
     return intr.intersection ?
       calculatePixelColor(intr) :
@@ -81,17 +78,9 @@ public:
       lightDir = glm::normalize(lightDir);
       const Ray shadowRay(correctedHitPoint, lightDir);
 
-      IntersectionData shadowRayIntrs{};
+      IntersectionData shadowRayIntrs = triangles.intersectAABBTree(shadowRay);
 
-      for (auto& triangle : triangles) {
-        if (triangle.material.type != MaterialType::REFRACTIVE) {
-          if (triangle.intersect(shadowRay, shadowRayIntrs)) {
-            break;
-          }
-        }
-      }
-
-      if (shadowRayIntrs.t > sphereRadius) {
+      if (shadowRayIntrs.material.type != MaterialType::REFRACTIVE && shadowRayIntrs.t > sphereRadius) {
         const float cosineLaw = glm::max(0.0f, glm::dot(lightDir, intr.pN));
         const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
         const Vec3 colorContribution = Vec3(float(light.intensity) / sphereArea * cosineLaw);
@@ -191,7 +180,7 @@ public:
     return diffReflColor / (float)giRaysCount;
   }
 
-	std::vector<Triangle> triangles;
+	AABBTree triangles;
 	std::vector<Light> lights;
   Vec3 backgroundColor;
   const float shadowBias = 0.0055f;
