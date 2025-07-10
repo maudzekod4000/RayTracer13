@@ -43,7 +43,6 @@ struct Triangle {
 		// We want them to blend a bit to avoid jagged edges.
 		constexpr float e = -0.000001f;
 
-    // TODO: Cache these things in the triangle to reduce computation.
 		if (dot(n, cross(b.pos - a.pos, p - a.pos)) <= e ||
 			dot(n, cross(c.pos - b.pos, p - b.pos)) <= e ||
 			dot(n, cross(a.pos - c.pos, p - c.pos)) <= e) {
