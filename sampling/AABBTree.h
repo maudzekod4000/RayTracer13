@@ -10,7 +10,7 @@
 #include "calc/TypeDefs.h"
 
 struct Node {
-	Node(const std::vector<Triangle>& triangles, bool isLeaf, Vec3& min, Vec3& max, int child1, int child2) :
+	Node(const std::vector<Triangle>& triangles, bool isLeaf, Vec& min, Vec& max, int child1, int child2) :
 		triangles(triangles),
 		isLeaf(isLeaf),
 		box(AABB(min, max)),

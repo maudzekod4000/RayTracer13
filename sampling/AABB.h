@@ -6,16 +6,35 @@
 #include "sampling/Triangle.h"
 #include "sampling/Vertex.h"
 
-struct AABB {
-  explicit AABB(): min(Vec3(std::numeric_limits<float>::max())), max(-min) {}
-  explicit AABB(Vec3& min, Vec3& max): min(min), max(max) {}
-  explicit AABB(const Triangle& t): AABB() { this->expand(t); }
-  Vec3 min;
-  Vec3 max;
+using namespace DirectX;
 
-  inline void expand(const Triangle& triangle) {
-    min = glm::min(triangle.a.pos, glm::min(triangle.b.pos, glm::min(triangle.c.pos, min)));
-    max = glm::max(triangle.a.pos, glm::max(triangle.b.pos, glm::max(triangle.c.pos, max)));
+struct AABB {
+  explicit AABB(const Vec& min, const Vec& max) {
+    BoundingBox::CreateFromPoints(
+      boundingBox,
+      min, max
+    );
+  }
+  explicit AABB(): AABB(XMVECTOR(std::numeric_limits<float>().min()), XMVECTOR(std::numeric_limits<float>().max())) {
+  }
+  explicit AABB(const Triangle& t): AABB() {
+    // SIMD power mothefucka
+    BoundingBox triangleBB1;
+    BoundingBox::CreateFromPoints(triangleBB1, t.a.pos, t.b.pos);
+    BoundingBox triangleBB2;
+    BoundingBox::CreateFromPoints(triangleBB2, t.c.pos, t.c.pos);
+    BoundingBox::CreateMerged(boundingBox, triangleBB1, triangleBB2);
+  }
+  DirectX::BoundingBox boundingBox; // backing structure
+
+  inline void expand(const Triangle& t) {
+    BoundingBox triangleBB1;
+    BoundingBox::CreateFromPoints(triangleBB1, t.a.pos, t.b.pos);
+    BoundingBox triangleBB2;
+    BoundingBox::CreateFromPoints(triangleBB2, t.c.pos, t.c.pos);
+    BoundingBox triangleBB;
+    BoundingBox::CreateMerged(triangleBB, triangleBB1, triangleBB2);
+    BoundingBox::CreateMerged(boundingBox, boundingBox, triangleBB);
   }
 
   inline bool intersect(const Triangle& triangle) const {
@@ -23,38 +42,11 @@ struct AABB {
   }
 
   inline bool intersect(const AABB& aabb) const {
-    return max.x >= aabb.min.x && aabb.max.x >= min.x &&
-      max.y >= aabb.min.y && aabb.max.y >= min.y &&
-      max.z >= aabb.min.z && aabb.max.z >= min.z;
+    return boundingBox.Intersects(aabb.boundingBox);
   }
 
-  // Ray-box intersection algorithm taken from the internet
   inline bool intersect(const Ray& r) const {
-    float tmin = (min.x - r.origin.x) / r.dir.x;
-    float tmax = (max.x - r.origin.x) / r.dir.x;
-    float temp = tmin;
-    tmin = std::min(tmin, tmax);
-    tmax = std::max(temp, tmax);
-
-    float tymin = (min.y - r.origin.y) / r.dir.y;
-    float tymax = (max.y - r.origin.y) / r.dir.y;
-
-    float tempy = tymin;
-    tymin = std::min(tymin, tymax);
-    tymax = std::max(tempy, tymax);
-
-    if ((tmin > tymax) || (tymin > tmax))
-      return false;
-
-    tmin = std::max(tmin, tymin);
-    tmax = std::min(tymax, tmax);
-
-    float tzmin = (min.z - r.origin.z) / r.dir.z;
-    float tzmax = (max.z - r.origin.z) / r.dir.z;
-    float tempz = tzmin;
-    tzmin = std::min(tzmin, tzmax);
-    tzmax = std::max(tempz, tzmax);
-
-    return !((tmin > tzmax) || (tzmin > tmax));
+    float dist;
+    return boundingBox.Intersects(r.origin, r.dir, dist);
   }
 };

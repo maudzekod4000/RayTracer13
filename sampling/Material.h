@@ -10,7 +10,7 @@ enum class MaterialType {
 };
 
 struct Material {
-  Vec3 albedo = Vec3(1.0, 0.0f, 0.0f); ///< Natural color of the object/material.
+  Vec albedo = Vec(1.0, 0.0f, 0.0f); ///< Natural color of the object/material.
   MaterialType type = MaterialType::DIFFUSE;
   float ior = 1.0f;
   bool smoothShading = false;

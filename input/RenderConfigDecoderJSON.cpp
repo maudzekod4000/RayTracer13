@@ -74,7 +74,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		return std::unexpected(std::format(sizeMismatchFmt, bgColor.Size(), bgColorSize, kBgColor));
 	}
 
-	Vec3 backgroundColor(bgColor[0].GetFloat(), bgColor[1].GetFloat(), bgColor[2].GetFloat());
+	Vec backgroundColor(bgColor[0].GetFloat(), bgColor[1].GetFloat(), bgColor[2].GetFloat());
 
 	const auto& image = settings[kImage];
 
@@ -146,7 +146,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		}
 	}
 
-	Vec3 cameraPos(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+	Vec cameraPos(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
 
   std::vector<Material> sceneMaterials;
   if (d.HasMember("materials")) {
@@ -254,7 +254,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 				return std::unexpected(std::format(invalidValueInArrayFmt, vertex1z.GetString(), kVertices));
 			}
 
-			Vec3 vertex1Pos{ vertex1x.GetFloat(), vertex1y.GetFloat(), vertex1z.GetFloat() };
+			Vec vertex1Pos{ vertex1x.GetFloat(), vertex1y.GetFloat(), vertex1z.GetFloat() };
 
       idxToVertex[vertex1Idx.GetInt()] = Vertex(vertex1Pos);
 
@@ -282,7 +282,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 				return std::unexpected(std::format(invalidValueInArrayFmt, vertex2z.GetString(), kVertices));
 			}
 
-			Vec3 vertex2Pos{ vertex2x.GetFloat(), vertex2y.GetFloat(), vertex2z.GetFloat() };
+			Vec vertex2Pos{ vertex2x.GetFloat(), vertex2y.GetFloat(), vertex2z.GetFloat() };
 
       idxToVertex[vertex2Idx.GetInt()] = Vertex(vertex2Pos);
 
@@ -310,7 +310,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 				return std::unexpected(std::format(invalidValueInArrayFmt, vertex3z.GetString(), kVertices));
 			}
 
-			Vec3 vertex3Pos{ vertex3x.GetFloat(), vertex3y.GetFloat(), vertex3z.GetFloat() };
+			Vec vertex3Pos{ vertex3x.GetFloat(), vertex3y.GetFloat(), vertex3z.GetFloat() };
 
       idxToVertex[vertex3Idx.GetInt()] = Vertex(vertex3Pos);
 
@@ -325,7 +325,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
       Vertex& v2 = idxToVertex[triangle.v2];
       Vertex& v3 = idxToVertex[triangle.v3];
 
-      Vec3 n = MathUtils::normal(v1.pos, v2.pos, v3.pos);
+      Vec n = MathUtils::normal(v1.pos, v2.pos, v3.pos);
 
       v1.normal += n;
       v1.normal = glm::normalize(v1.normal);
@@ -373,7 +373,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		}
 
 		Light sceneLight;
-		sceneLight.pos = Vec3(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+		sceneLight.pos = Vec(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
 		
 		const auto& intensity = light[kIntensity];
 
@@ -383,7 +383,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
       const auto& albedo = light[kAlbedo];
 
       if (albedo.IsArray() && albedo.Size() == 3) {
-        sceneLight.albedo = Vec3(albedo[0].GetFloat(), albedo[1].GetFloat(), albedo[2].GetFloat());
+        sceneLight.albedo = Vec(albedo[0].GetFloat(), albedo[1].GetFloat(), albedo[2].GetFloat());
       }
     }
 

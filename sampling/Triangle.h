@@ -36,7 +36,7 @@ struct Triangle {
 			return false;
 		}
 
-		const Vec3 p = ray.origin + t * ray.dir;
+		const Vec p = ray.origin + t * ray.dir;
 
 		// If the intersection point is just a bit to the side of the triangle we don't care.
 		// We avoid artifacts when two triangle sides are next to each other.
@@ -72,6 +72,6 @@ struct Triangle {
 	Vertex a;
 	Vertex b;
 	Vertex c;
-	Vec3 n;
+	Vec n;
 	Material material;
 };

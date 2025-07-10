@@ -10,11 +10,11 @@ enum class RayType {
 
 struct Ray {
   Ray() = default;
-  Ray(const Vec3& origin, const Vec3& dir, int bounceCount = 0, RayType type = RayType::CAMERA):
+  Ray(const Vec& origin, const Vec& dir, int bounceCount = 0, RayType type = RayType::CAMERA):
     origin(origin), dir(dir), bounceCount(bounceCount), type(type) {}
 
-  Vec3 origin;
-  Vec3 dir;
+  Vec origin;
+  Vec dir;
   int bounceCount;
   int maxBounces;
   RayType type;

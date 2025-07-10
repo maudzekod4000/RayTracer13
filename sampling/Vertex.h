@@ -7,6 +7,6 @@
 // 1. Gather a vector of vertices with the indexing matching the one from the scene.
 // 2. Create a vector of triangles 
 struct Vertex {
-  Vec3 pos{};
-  Vec3 normal{}; ///< Smooth normal.
+  Vec pos{};
+  Vec normal{}; ///< Smooth normal.
 };

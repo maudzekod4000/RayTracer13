@@ -16,7 +16,7 @@
 
 class Scene {
 public:
-	explicit inline Scene(AABBTree&& t, std::vector<Light>&& l, const Vec3& background):
+	explicit inline Scene(AABBTree&& t, std::vector<Light>&& l, const Vec& background):
 		triangles(std::move(t)),
 		lights(std::move(l)),
     backgroundColor(background)
@@ -28,7 +28,7 @@ public:
 	Scene(const Scene&) = delete;
 	Scene& operator=(const Scene&) = delete;
 
-	inline Vec3 trace(const Ray& ray) const {
+	inline Vec trace(const Ray& ray) const {
     if (ray.type == RayType::CAMERA) {
       if (ray.bounceCount > cameraRaysMaxDepth) {
         return backgroundColor;
@@ -46,15 +46,15 @@ public:
       backgroundColor;
 	}
 
-	inline Vec3 calculatePixelColor(const IntersectionData& intr) const {
+	inline Vec calculatePixelColor(const IntersectionData& intr) const {
     if (intr.material.type == MaterialType::DIFFUSE) {
-      const Vec3 directLight = calculateDirectLight(intr);
-      const Vec3 indirectLight = calculateDiffuse(intr);
-      const Vec3 totalLight = glm::clamp(directLight + indirectLight, 0.0f, 1.0f);
+      const Vec directLight = calculateDirectLight(intr);
+      const Vec indirectLight = calculateDiffuse(intr);
+      const Vec totalLight = glm::clamp(directLight + indirectLight, 0.0f, 1.0f);
       return intr.material.albedo * totalLight;
     }
     else if (intr.material.type == MaterialType::REFLECTIVE) {
-      const Vec3 lightColor = calculateDirectLight(intr);
+      const Vec lightColor = calculateDirectLight(intr);
       return calculateReflection(intr.ray, intr.pN, intr.p) * lightColor;
     }
     else if (intr.material.type == MaterialType::REFRACTIVE) {
@@ -68,12 +68,12 @@ public:
     }
 	}
 
-  inline Vec3 calculateDirectLight(const IntersectionData& intr) const {
-    Vec3 finalColor(0);
+  inline Vec calculateDirectLight(const IntersectionData& intr) const {
+    Vec finalColor(0);
 
     for (const Light& light : lights) {
-      const Vec3 correctedHitPoint = intr.p + intr.pN * shadowBias;
-      Vec3 lightDir = light.pos - correctedHitPoint;
+      const Vec correctedHitPoint = intr.p + intr.pN * shadowBias;
+      Vec lightDir = light.pos - correctedHitPoint;
       const float sphereRadius = glm::length(lightDir);
       lightDir = glm::normalize(lightDir);
       const Ray shadowRay(correctedHitPoint, lightDir);
@@ -83,25 +83,25 @@ public:
       if (shadowRayIntrs.material.type != MaterialType::REFRACTIVE && shadowRayIntrs.t > sphereRadius) {
         const float cosineLaw = glm::max(0.0f, glm::dot(lightDir, intr.pN));
         const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
-        const Vec3 colorContribution = Vec3(float(light.intensity) / sphereArea * cosineLaw);
+        const Vec colorContribution = Vec(float(light.intensity) / sphereArea * cosineLaw);
         finalColor += colorContribution;
       }
     }
 
-    return glm::clamp(finalColor, Vec3(0.0f), Vec3(1.0f));
+    return glm::clamp(finalColor, Vec(0.0f), Vec(1.0f));
   }
 
   // Perfect mirror reflection. As if the ray hits not the mirror but the surface it reflects.
-  inline Vec3 calculateReflection(const Ray& ray, const Vec3& n, const Vec3& p) const {
+  inline Vec calculateReflection(const Ray& ray, const Vec& n, const Vec& p) const {
     return trace(Ray(p + n * reflectionBias, glm::reflect(ray.dir, n), ray.bounceCount + 1, ray.type));
   }
 
   // TODO: There is some shadow acne on the edges of the refraction.
-  inline Vec3 calculateRefraction(const IntersectionData& intr) const {
+  inline Vec calculateRefraction(const IntersectionData& intr) const {
       float n1 = 1.0f;
       float n2 = intr.material.ior;
-      Vec3 surfaceNormal = intr.material.smoothShading ? intr.pN : intr.pNN;
-      const Vec3 rayDir = intr.ray.dir;
+      Vec surfaceNormal = intr.material.smoothShading ? intr.pN : intr.pNN;
+      const Vec rayDir = intr.ray.dir;
       const bool inside = glm::dot(rayDir, surfaceNormal) > 0;
 
       if (inside) {
@@ -117,29 +117,29 @@ public:
         return calculateReflection(intr.ray, surfaceNormal, intr.p);
       }
 
-      const Vec3 R = glm::refract(rayDir, surfaceNormal, iorRatio);
+      const Vec R = glm::refract(rayDir, surfaceNormal, iorRatio);
       const float shlikApprox = calculateReflectance(cosTheta, iorRatio);
 
-      const Vec3 reflectionColor = calculateReflection(intr.ray, surfaceNormal, intr.p);
+      const Vec reflectionColor = calculateReflection(intr.ray, surfaceNormal, intr.p);
 
-      const Vec3 refractionOrigin(intr.p + (-surfaceNormal * refractionBias));
+      const Vec refractionOrigin(intr.p + (-surfaceNormal * refractionBias));
       const Ray refractionRay(refractionOrigin, R, intr.ray.bounceCount + 1, intr.ray.type);
 
-      const Vec3 refractionColor = trace(refractionRay);
+      const Vec refractionColor = trace(refractionRay);
 
       return glm::mix(refractionColor, reflectionColor, shlikApprox);
   }
 
-  inline Vec3 calculateDiffuse(const IntersectionData& intr) const {
-    Vec3 diffReflColor(0.0f);
-    Vec3 n = intr.material.smoothShading ? intr.pN : intr.pNN;
+  inline Vec calculateDiffuse(const IntersectionData& intr) const {
+    Vec diffReflColor(0.0f);
+    Vec n = intr.material.smoothShading ? intr.pN : intr.pNN;
     std::mt19937 rng(std::random_device{}());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     for (size_t i = 0; i < giRaysCount; i++) {
-      Vec3 rightAxis = glm::normalize(glm::cross(intr.ray.dir, n));
-      Vec3 upAxis = n;
-      Vec3 forwardAxis = glm::normalize(glm::cross(rightAxis, upAxis));
+      Vec rightAxis = glm::normalize(glm::cross(intr.ray.dir, n));
+      Vec upAxis = n;
+      Vec forwardAxis = glm::normalize(glm::cross(rightAxis, upAxis));
 
       glm::mat3x3 localHitMatrix(1.0f);
       localHitMatrix[0] = rightAxis;
@@ -149,7 +149,7 @@ public:
       // Generate random angle in the XY plane
       float randAngleInXY = M_PI * dist(rng);
       // Construct random vector in the XY plane
-      Vec3 randVecXY = Vec3(cos(randAngleInXY), sin(randAngleInXY), 0);
+      Vec randVecXY = Vec(cos(randAngleInXY), sin(randAngleInXY), 0);
 
       // Generate random angle in the XZ plane
       float randAngleINXZ = M_PI * 2 * dist(rng);
@@ -159,10 +159,10 @@ public:
       rotMatY[0][2] = sin(randAngleINXZ);
       rotMatY[2][2] = cos(randAngleINXZ);
 
-      Vec3 randVecInXYRotated = randVecXY * rotMatY;
+      Vec randVecInXYRotated = randVecXY * rotMatY;
 
-      Vec3 diffReflRayDir = randVecInXYRotated * localHitMatrix;
-      Vec3 diffRayOrigin = intr.p + (n * reflectionBias);
+      Vec diffReflRayDir = randVecInXYRotated * localHitMatrix;
+      Vec diffRayOrigin = intr.p + (n * reflectionBias);
 
       if (intr.ray.type == RayType::CAMERA) {
         // This is the first camera ray that hit the surface, now we initiate GI rays.
@@ -182,7 +182,7 @@ public:
 
 	AABBTree triangles;
 	std::vector<Light> lights;
-  Vec3 backgroundColor;
+  Vec backgroundColor;
   const float shadowBias = 0.0055f;
   const float reflectionBias = 0.0001f;
   const float refractionBias = 0.0001f;

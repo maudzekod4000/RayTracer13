@@ -57,7 +57,7 @@ int main() {
   std::for_each(std::execution::par, rowRange.begin(), rowRange.end(), [&](int i) {
     for (uint16_t j = 0; j < height; j++) {
       // Simple anti aliasing
-      Vec3 averagedColor(0);
+      Vec averagedColor(0);
       for (int waa = 1; waa <= AA; waa++) {
         for (int haa = 1; haa <= AA; haa++) {
           float currentOffset = haa * offset;
