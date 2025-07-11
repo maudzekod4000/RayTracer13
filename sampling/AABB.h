@@ -49,4 +49,30 @@ struct AABB {
     float dist;
     return boundingBox.Intersects(r.origin, r.dir, dist);
   }
+
+  inline void split(int component, AABB& first, AABB& second) const {
+    XMVECTOR bbCenterVec = XMLoadFloat3(&boundingBox.Center);
+    XMVECTOR bbExtentsVec = XMLoadFloat3(&boundingBox.Extents);
+
+    // The min and max of the original bounding box.
+    XMVECTOR minVec = bbCenterVec - bbExtentsVec;
+    XMVECTOR maxVec = bbCenterVec + bbExtentsVec;
+
+    XMFLOAT3 min;
+    XMStoreFloat3(&min, minVec);
+    XMFLOAT3 max;
+    XMStoreFloat3(&max, maxVec);
+
+    if (component == 0) {
+      
+    }
+    else if (component == 1) {
+      
+    }
+    else {
+
+    }
+
+
+  }
 };

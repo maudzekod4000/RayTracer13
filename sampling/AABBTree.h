@@ -10,10 +10,10 @@
 #include "calc/TypeDefs.h"
 
 struct Node {
-	Node(const std::vector<Triangle>& triangles, bool isLeaf, Vec& min, Vec& max, int child1, int child2) :
+	Node(const std::vector<Triangle>& triangles, bool isLeaf, AABB& aabb, int child1, int child2) :
 		triangles(triangles),
 		isLeaf(isLeaf),
-		box(AABB(min, max)),
+		box(aabb),
 		child1Idx(child1),
 		child2Idx(child2) {}
 	Node() = default;
@@ -96,13 +96,13 @@ private:
 
 		// We should not continue splitting further
 		if (depth > maxDepth || triangles.size() <= leafSize) {
-			nodes.emplace_back(triangles, true, box.min, box.max, -1, -1);
+			nodes.emplace_back(triangles, true, box, -1, -1);
 			
 			return;
 		}
 
 		// Add a new parent node
-		nodes.emplace_back(std::vector<Triangle>{}, false, box.min, box.max, -1, -1);
+		nodes.emplace_back(std::vector<Triangle>{}, false, box, -1, -1);
 
 		// Continue splitting the box
 		AABB firstChildBox = box;
