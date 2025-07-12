@@ -105,11 +105,10 @@ private:
 		nodes.emplace_back(std::vector<Triangle>{}, false, box, -1, -1);
 
 		// Continue splitting the box
-		AABB firstChildBox = box;
-		firstChildBox.max[component] = firstChildBox.min[component] + ((firstChildBox.max[component] - firstChildBox.min[component]) / 2);
+		AABB firstChildBox;
+		AABB secondChildBox;
+    box.split(component, firstChildBox, secondChildBox);
 		buildTree(triangles, firstChildBox, (component + 1) % 3, idx, 1, depth + 1);
-		AABB secondChildBox = box;
-		secondChildBox.min[component] = firstChildBox.max[component];
 		buildTree(triangles, secondChildBox, (component + 1) % 3, idx, 2, depth + 1);
 	}
 };

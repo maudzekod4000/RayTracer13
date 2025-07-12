@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+#include <assert.h>
 
 #include "calc/TypeDefs.h"
 #include "sampling/Triangle.h"
@@ -63,16 +64,29 @@ struct AABB {
     XMFLOAT3 max;
     XMStoreFloat3(&max, maxVec);
 
+    XMVECTOR newFirstBoxMin = minVec;
+    XMVECTOR newFirstBoxMax;
+
+    XMVECTOR newSecondBoxMin;
+    XMVECTOR newSecondBoxMax = maxVec;
+
     if (component == 0) {
-      
+      newFirstBoxMax = XMVectorSet(boundingBox.Center.x, max.y, max.z, 0.0f);
+      newSecondBoxMin = XMVectorSet(boundingBox.Center.x, min.y, min.z, 0.0f);
     }
     else if (component == 1) {
-      
+      newFirstBoxMax = XMVectorSet(max.x, boundingBox.Center.y, max.z, 0.0f);
+      newSecondBoxMin = XMVectorSet(min.x, boundingBox.Center.y, min.z, 0.0f);
+    }
+    else if (component == 2) {
+      newFirstBoxMax = XMVectorSet(max.x, max.y, boundingBox.Center.z, 0.0f);
+      newSecondBoxMin = XMVectorSet(min.x, min.y, boundingBox.Center.z, 0.0f);
     }
     else {
-
+      assert(false);
     }
 
-
+    BoundingBox::CreateFromPoints(first.boundingBox, newFirstBoxMin, newFirstBoxMax);
+    BoundingBox::CreateFromPoints(second.boundingBox, newSecondBoxMin, newSecondBoxMax);
   }
 };
