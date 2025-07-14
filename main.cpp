@@ -57,7 +57,8 @@ int main() {
   std::for_each(std::execution::par, rowRange.begin(), rowRange.end(), [&](int i) {
     for (uint16_t j = 0; j < height; j++) {
       // Simple anti aliasing
-      Vec averagedColor(0);
+      using namespace DirectX;
+      Vec averagedColor = XMVectorZero();
       for (int waa = 1; waa <= AA; waa++) {
         for (int haa = 1; haa <= AA; haa++) {
           float currentOffset = haa * offset;
@@ -66,8 +67,10 @@ int main() {
         }
       }
       averagedColor /= samplesCount;
-      averagedColor = glm::clamp(averagedColor, 0.0f, 1.0f);
-      image.writePixel(j, i, PPMColor(static_cast<uint16_t>(averagedColor.r * MAX_COLOR), static_cast<uint16_t>(averagedColor.g * MAX_COLOR), static_cast<uint16_t>(averagedColor.b * MAX_COLOR)));
+      averagedColor = DirectX::XMVectorClamp(averagedColor, XMVectorZero(), XMVectorSplatOne());
+      XMFLOAT3 avgColorLoaded;
+      XMStoreFloat3(&avgColorLoaded, averagedColor);
+      image.writePixel(j, i, PPMColor(static_cast<uint16_t>(avgColorLoaded.x * MAX_COLOR), static_cast<uint16_t>(avgColorLoaded.y * MAX_COLOR), static_cast<uint16_t>(avgColorLoaded.z * MAX_COLOR)));
     }
   });
 

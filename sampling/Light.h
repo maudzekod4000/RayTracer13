@@ -4,6 +4,6 @@
 
 struct Light {
 	Vec pos;
-  Vec albedo = Vec(1.0f); /// White light
+  Vec albedo = DirectX::XMVectorSplatOne(); /// White light
 	int intensity;
 };

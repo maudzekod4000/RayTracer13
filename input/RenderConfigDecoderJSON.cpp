@@ -44,6 +44,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 	assert(len > 0);
 
 	using namespace rapidjson;
+  using namespace DirectX;
 
 	Document d;
 
@@ -74,7 +75,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		return std::unexpected(std::format(sizeMismatchFmt, bgColor.Size(), bgColorSize, kBgColor));
 	}
 
-	Vec backgroundColor(bgColor[0].GetFloat(), bgColor[1].GetFloat(), bgColor[2].GetFloat());
+  Vec backgroundColor = XMVectorSet(bgColor[0].GetFloat(), bgColor[1].GetFloat(), bgColor[2].GetFloat(), 0.0f);
 
 	const auto& image = settings[kImage];
 
@@ -117,17 +118,22 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		}
 	}
 
-	Mat3 cameraTm(
+	Mat cameraTm = XMMatrixSet(
 		matrix[0].GetFloat(),
 		matrix[1].GetFloat(),
 		matrix[2].GetFloat(),
+    0.0f,
 		matrix[3].GetFloat(),
 		matrix[4].GetFloat(),
 		matrix[5].GetFloat(),
+    0.0f,
 		matrix[6].GetFloat(),
 		matrix[7].GetFloat(),
-		matrix[8].GetFloat()
+		matrix[8].GetFloat(),
+    0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f
 	);
+  cameraTm = XMMatrixTranspose(cameraTm);
 
 	const auto& pos = camera[kPos];
 
@@ -183,9 +189,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
         if (material.HasMember(kAlbedo)) {
           auto albedoVec = material[kAlbedo].GetArray();
-          sceneMaterial.albedo.x = albedoVec[0].GetFloat();
-          sceneMaterial.albedo.y = albedoVec[1].GetFloat();
-          sceneMaterial.albedo.z = albedoVec[2].GetFloat();
+          sceneMaterial.albedo = XMVectorSet(albedoVec[0].GetFloat(), albedoVec[1].GetFloat(), albedoVec[2].GetFloat(), 0.0f);
         }
 
         sceneMaterials.push_back(sceneMaterial);
@@ -325,16 +329,16 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
       Vertex& v2 = idxToVertex[triangle.v2];
       Vertex& v3 = idxToVertex[triangle.v3];
 
-      Vec n = MathUtils::normal(v1.pos, v2.pos, v3.pos);
+      Vec n = XMVector3Normalize(XMVector3Cross(v2.pos - v1.pos, v3.pos - v1.pos));
 
       v1.normal += n;
-      v1.normal = glm::normalize(v1.normal);
+      v1.normal = XMVector3Normalize(v1.normal);
 
       v2.normal += n;
-      v2.normal = glm::normalize(v2.normal);
+      v2.normal = XMVector3Normalize(v2.normal);
 
       v3.normal += n;
-      v3.normal = glm::normalize(v3.normal);
+      v3.normal = XMVector3Normalize(v3.normal);
     }
 
     for (const auto& triangle : parsedTriangles) {

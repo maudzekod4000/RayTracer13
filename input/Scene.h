@@ -159,9 +159,9 @@ public:
       float randAngleINXZ = M_PI * 2 * dist(rng);
       XMMATRIX rotMatY = XMMatrixRotationY(randAngleINXZ);
 
-      Vec randVecInXYRotated = XMMatrixMultiply(rotMatY, randVecXY);
+      Vec randVecInXYRotated = XMVector3Transform(randVecXY, rotMatY);
 
-      Vec diffReflRayDir = randVecInXYRotated * localHitMatrix;
+      Vec diffReflRayDir = XMVector3Transform(randVecInXYRotated, localHitMatrix);
       Vec diffRayOrigin = intr.p + (n * reflectionBias);
 
       if (intr.ray.type == RayType::CAMERA) {
@@ -196,7 +196,7 @@ private:
   inline float calculateReflectance(float cosine, float etaiOverEtat) const {
     float r0 = (1.0f - etaiOverEtat) / (1.0f + etaiOverEtat);
     r0 = r0 * r0;
-    return r0 + (1.0f - r0) * glm::pow((1.0f - cosine), 5.0f);
+    return r0 + (1.0f - r0) * std::powf((1.0f - cosine), 5.0f);
   }
 };
 

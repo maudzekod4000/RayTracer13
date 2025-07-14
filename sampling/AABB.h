@@ -16,7 +16,7 @@ struct AABB {
       min, max
     );
   }
-  explicit AABB(): AABB(XMVECTOR(std::numeric_limits<float>().min()), XMVECTOR(std::numeric_limits<float>().max())) {
+  explicit AABB(): AABB(-XMVectorSplatInfinity(), XMVectorSplatInfinity()) {
   }
   explicit AABB(const Triangle& t): AABB() {
     // SIMD power mothefucka

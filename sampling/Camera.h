@@ -6,6 +6,8 @@
 #include "calc/TypeDefs.h"
 #include "Ray.h"
 
+using namespace DirectX;
+
 struct Camera {
     Camera(const Vec& pos, const Mat& matrix, uint16_t sensorWidth,
         uint16_t sensorHeight, float focalDistance):
