@@ -12,7 +12,7 @@ struct Triangle {
 		a(a),
 		b(b),
 		c(c),
-		n(MathUtils::normal(a.pos, b.pos, c.pos)),
+		n(XMVector3Normalize(XMVector3Cross(b.pos - a.pos, c.pos - a.pos))),
 		material(m)
 	{}
 
@@ -30,7 +30,10 @@ struct Triangle {
 	inline bool intersect(const Ray& ray, IntersectionData& intersectionData) const {
 		// The projection of the ray direction onto the normal of the triangle
 		// is the length from the ray origin to the traingle plane.
-    const float t = glm::dot(this->a.pos - ray.origin, n) / glm::dot(ray.dir, n);
+    XMVECTOR originToTriangleVertexA = a.pos - ray.origin;
+    float angleBetweenTriangleAndRay = XMVectorGetX(XMVector3Dot(originToTriangleVertexA, n));
+    float angleBetweenRayDirAndN = XMVectorGetX(XMVector3Dot(ray.dir, n));
+    const float t = angleBetweenTriangleAndRay / angleBetweenRayDirAndN;
 
 		if (t > intersectionData.t || t <= 0.0f) {
 			return false;
@@ -43,9 +46,9 @@ struct Triangle {
 		// We want them to blend a bit to avoid jagged edges.
 		constexpr float e = -0.000001f;
 
-		if (dot(n, cross(b.pos - a.pos, p - a.pos)) <= e ||
-			dot(n, cross(c.pos - b.pos, p - b.pos)) <= e ||
-			dot(n, cross(a.pos - c.pos, p - c.pos)) <= e) {
+		if (XMVectorGetX(XMVector3Dot(n, XMVector3Cross(b.pos - a.pos, p - a.pos))) <= e ||
+			XMVectorGetX(XMVector3Dot(n, XMVector3Cross(c.pos - b.pos, p - b.pos))) <= e ||
+			XMVectorGetX(XMVector3Dot(n, XMVector3Cross(a.pos - c.pos, p - c.pos))) <= e) {
 			return false;
 		}
 
@@ -56,9 +59,9 @@ struct Triangle {
     intersectionData.ray = ray;
     intersectionData.pNN = n;
 
-    float areaM = glm::length(glm::cross(p - a.pos, c.pos - a.pos)) / 2.0f;
-    float areaN = glm::length(glm::cross(b.pos - a.pos, p - a.pos)) / 2.0f;
-    float areaTri = glm::length(glm::cross(b.pos - a.pos, c.pos - a.pos)) / 2.0f;
+    float areaM = XMVectorGetX(XMVector3Length(XMVector3Cross(p - a.pos, c.pos - a.pos))) * 0.5f;
+    float areaN = XMVectorGetX(XMVector3Length(XMVector3Cross(b.pos - a.pos, p - a.pos))) * 0.5f;
+    float areaTri = XMVectorGetX(XMVector3Length(XMVector3Cross(b.pos - a.pos, c.pos - a.pos))) * 0.5f;
 
     float u = areaM / areaTri;
     float v = areaN / areaTri;

@@ -6,6 +6,7 @@
 #include <vector>
 #include <math.h>
 #include <random>
+#include <algorithm>
 
 #include "sampling/Triangle.h"
 #include "sampling/IntersectionData.h"
@@ -50,7 +51,7 @@ public:
     if (intr.material.type == MaterialType::DIFFUSE) {
       const Vec directLight = calculateDirectLight(intr);
       const Vec indirectLight = calculateDiffuse(intr);
-      const Vec totalLight = glm::clamp(directLight + indirectLight, 0.0f, 1.0f);
+      const Vec totalLight = XMVectorClamp(directLight + indirectLight, XMVectorZero(), XMVectorSplatOne());
       return intr.material.albedo * totalLight;
     }
     else if (intr.material.type == MaterialType::REFLECTIVE) {
@@ -74,26 +75,27 @@ public:
     for (const Light& light : lights) {
       const Vec correctedHitPoint = intr.p + intr.pN * shadowBias;
       Vec lightDir = light.pos - correctedHitPoint;
-      const float sphereRadius = glm::length(lightDir);
-      lightDir = glm::normalize(lightDir);
+      const float sphereRadius = XMVectorGetX(XMVector3Length(lightDir));
+      lightDir = XMVector3Normalize(lightDir);
       const Ray shadowRay(correctedHitPoint, lightDir);
 
       IntersectionData shadowRayIntrs = triangles.intersectAABBTree(shadowRay);
 
       if (shadowRayIntrs.material.type != MaterialType::REFRACTIVE && shadowRayIntrs.t > sphereRadius) {
-        const float cosineLaw = glm::max(0.0f, glm::dot(lightDir, intr.pN));
+        float lightDirPnAngle = XMVectorGetX(XMVector3Dot(lightDir, intr.pN));
+        const float cosineLaw = std::max(0.0f, lightDirPnAngle);
         const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
         const Vec colorContribution = Vec(float(light.intensity) / sphereArea * cosineLaw);
         finalColor += colorContribution;
       }
     }
 
-    return glm::clamp(finalColor, Vec(0.0f), Vec(1.0f));
+    return XMVectorClamp(finalColor, XMVectorZero(), XMVectorSplatOne());
   }
 
   // Perfect mirror reflection. As if the ray hits not the mirror but the surface it reflects.
   inline Vec calculateReflection(const Ray& ray, const Vec& n, const Vec& p) const {
-    return trace(Ray(p + n * reflectionBias, glm::reflect(ray.dir, n), ray.bounceCount + 1, ray.type));
+    return trace(Ray(p + n * reflectionBias, XMVector3Reflect(ray.dir, n), ray.bounceCount + 1, ray.type));
   }
 
   // TODO: There is some shadow acne on the edges of the refraction.
@@ -102,7 +104,7 @@ public:
       float n2 = intr.material.ior;
       Vec surfaceNormal = intr.material.smoothShading ? intr.pN : intr.pNN;
       const Vec rayDir = intr.ray.dir;
-      const bool inside = glm::dot(rayDir, surfaceNormal) > 0;
+      const bool inside = XMVectorGetX(XMVector3Dot(rayDir, surfaceNormal)) > 0;
 
       if (inside) {
         surfaceNormal = -surfaceNormal;
@@ -110,14 +112,14 @@ public:
       }
 
       const float iorRatio = n1 / n2;
-      const float cosTheta = glm::dot(-rayDir, surfaceNormal);
-      const float sinTheta = glm::sqrt(1.0f - cosTheta * cosTheta);
+      const float cosTheta = XMVectorGetX(XMVector3Dot(-rayDir, surfaceNormal));
+      const float sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
 
       if (iorRatio * sinTheta > 1.0f) {
         return calculateReflection(intr.ray, surfaceNormal, intr.p);
       }
 
-      const Vec R = glm::refract(rayDir, surfaceNormal, iorRatio);
+      const Vec R = XMVector3Refract(rayDir, surfaceNormal, iorRatio);
       const float shlikApprox = calculateReflectance(cosTheta, iorRatio);
 
       const Vec reflectionColor = calculateReflection(intr.ray, surfaceNormal, intr.p);
@@ -127,7 +129,7 @@ public:
 
       const Vec refractionColor = trace(refractionRay);
 
-      return glm::mix(refractionColor, reflectionColor, shlikApprox);
+      return XMVectorLerp(refractionColor, reflectionColor, shlikApprox);
   }
 
   inline Vec calculateDiffuse(const IntersectionData& intr) const {
@@ -137,14 +139,16 @@ public:
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     for (size_t i = 0; i < giRaysCount; i++) {
-      Vec rightAxis = glm::normalize(glm::cross(intr.ray.dir, n));
+      Vec rightAxis = XMVector3Normalize(XMVector3Cross(intr.ray.dir, n));
       Vec upAxis = n;
-      Vec forwardAxis = glm::normalize(glm::cross(rightAxis, upAxis));
+      Vec forwardAxis = XMVector3Normalize(XMVector3Cross(rightAxis, upAxis));
 
-      glm::mat3x3 localHitMatrix(1.0f);
-      localHitMatrix[0] = rightAxis;
-      localHitMatrix[1] = forwardAxis;
-      localHitMatrix[2] = upAxis;
+      XMMATRIX localHitMatrix = XMMATRIX(
+        rightAxis,     // Row 0
+        forwardAxis,   // Row 1
+        upAxis,        // Row 2
+        XMVectorSet(0, 0, 0, 1) // Optional 4th row for padding if needed
+      );
 
       // Generate random angle in the XY plane
       float randAngleInXY = M_PI * dist(rng);
@@ -153,13 +157,9 @@ public:
 
       // Generate random angle in the XZ plane
       float randAngleINXZ = M_PI * 2 * dist(rng);
-      glm::mat3x3 rotMatY(1.0f);
-      rotMatY[0][0] = cos(randAngleINXZ);
-      rotMatY[2][0] = -sin(randAngleINXZ);
-      rotMatY[0][2] = sin(randAngleINXZ);
-      rotMatY[2][2] = cos(randAngleINXZ);
+      XMMATRIX rotMatY = XMMatrixRotationY(randAngleINXZ);
 
-      Vec randVecInXYRotated = randVecXY * rotMatY;
+      Vec randVecInXYRotated = XMMatrixMultiply(rotMatY, randVecXY);
 
       Vec diffReflRayDir = randVecInXYRotated * localHitMatrix;
       Vec diffRayOrigin = intr.p + (n * reflectionBias);

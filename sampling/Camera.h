@@ -7,52 +7,64 @@
 #include "Ray.h"
 
 struct Camera {
-    Camera(const Vec& pos, const Mat3& matrix, uint16_t sensorWidth,
+    Camera(const Vec& pos, const Mat& matrix, uint16_t sensorWidth,
         uint16_t sensorHeight, float focalDistance):
   pos(pos),
-  transformationMatrix(Mat4(matrix)),
+  transformationMatrix(matrix),
   sensorWidth(sensorWidth),
   sensorHeight(sensorHeight),
   aspectRatio(float(sensorWidth) / sensorHeight),
   focalDist(focalDistance),
-  halfSensorW(sensorWidth / 2.0f),
-  halfSensorH(sensorHeight / 2.0f)
+  halfSensorW(sensorWidth * 0.5f),
+  halfSensorH(sensorHeight * 0.5f)
 {}
 
   /// positive degrees are for left pan. Rotating around the Y vector because we are Y-up.
   inline void pan(float degrees) {
-    transformationMatrix = glm::rotate(transformationMatrix, glm::radians(degrees), Vec(0.0f, 1.0f, 0.0f));
+    float radians = XMConvertToRadians(degrees);
+    XMVECTOR axis = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    XMMATRIX rotation = XMMatrixRotationAxis(axis, radians);
+    transformationMatrix = XMMatrixMultiply(rotation, transformationMatrix);
   }
 
   /// Positive values are for upward lift.
   /// If there is an object directly in front of the camera it should go down, when we tilt the camera up.
   inline void tilt(float degrees) {
-    transformationMatrix = glm::rotate(transformationMatrix, glm::radians(degrees), Vec(1.0f, 0.0f, 0.0f));
+    float radians = XMConvertToRadians(degrees);
+    XMVECTOR axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+    XMMATRIX rotation = XMMatrixRotationAxis(axis, radians);
+    transformationMatrix = XMMatrixMultiply(rotation, transformationMatrix);
   }
 
   /// Positive values are for left roll.
   /// If there is an object directly in front of the camera it should seem that it has been rotated clockwise.
   inline void roll(float degrees) {
-    transformationMatrix = glm::rotate(transformationMatrix, glm::radians(degrees), Vec(0.0f, 0.0f, 1.0f));
+    float radians = XMConvertToRadians(degrees);
+    XMVECTOR axis = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+    XMMATRIX rotation = XMMatrixRotationAxis(axis, radians);
+    transformationMatrix = XMMatrixMultiply(rotation, transformationMatrix);
   }
 
   /// Negative values are for forward movement.
   inline void dolly(float delta) {
-    transformationMatrix = glm::translate(transformationMatrix, Vec(0.0f, 0.0f, delta));
+    XMMATRIX t = XMMatrixTranslation(0.f, 0.f, delta);
+    transformationMatrix = XMMatrixMultiply(t, transformationMatrix);
   }
 
   /// Positive values are for right truck
   inline void truck(float delta) {
-    transformationMatrix = glm::translate(transformationMatrix, Vec(delta, 0.0f, 0.0f));
+    XMMATRIX t = XMMatrixTranslation(delta, 0.f, 0.f);
+    transformationMatrix = XMMatrixMultiply(t, transformationMatrix);
   }
 
   /// Positive values are for up movement.
   inline void pedestal(float delta) {
-    transformationMatrix = glm::translate(transformationMatrix, Vec(0.0f, delta, 0.0f));
+    XMMATRIX t = XMMatrixTranslation(0.f, delta, 0.f);
+    transformationMatrix = XMMatrixMultiply(t, transformationMatrix);
   }
 
   inline Vec applyTransformation(const Vec& vec) const {
-    return transformationMatrix * glm::vec4(vec, 1.0f);
+    return XMVector3Transform(vec, transformationMatrix);
   }
 
   /// Generates a ray towards a pixel on the render plane.
@@ -73,12 +85,12 @@ struct Camera {
 
     const Vec rayDir(x, y, focalDist);
 
-    return Ray(pos, glm::normalize(applyTransformation(rayDir)));
+    return Ray(pos, XMVector3Normalize(applyTransformation(rayDir)));
 }
 
 private:
   Vec pos;
-  glm::mat4 transformationMatrix;
+  Mat transformationMatrix;
   uint16_t sensorWidth;
   uint16_t sensorHeight;
   float aspectRatio;

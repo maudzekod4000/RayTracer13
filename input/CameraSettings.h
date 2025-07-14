@@ -5,9 +5,9 @@
 
 class CameraSettings final {
 public:
-	explicit CameraSettings(Mat3&& tm, Vec&& pos) noexcept;
+	explicit CameraSettings(Mat&& tm, Vec&& pos) noexcept;
 
-	const Mat3& getTransform() const noexcept;
+	const Mat& getTransform() const noexcept;
 
 	const Vec& getPos() const noexcept;
 
@@ -19,7 +19,7 @@ public:
 	CameraSettings(CameraSettings&&) = default;
 private:
 	/// Transformation matrix
-	Mat3 tm;
+	Mat tm;
 	/// Camera position in space.
 	Vec pos;
 };
