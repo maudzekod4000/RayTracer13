@@ -85,7 +85,7 @@ public:
         const float cosineLaw = std::max(0.0f, lightDirPnAngle);
         const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
         const float colorComponent = float(light.intensity) / sphereArea * cosineLaw;
-        const Vec colorContribution = XMVectorSet(colorComponent, colorComponent, colorComponent, 0.0f);
+        const Vec colorContribution = XMVectorSplatOne() * colorComponent;
         finalColor += colorContribution;
       }
     }
