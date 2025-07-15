@@ -70,7 +70,7 @@ public:
 	}
 
   inline Vec calculateDirectLight(const IntersectionData& intr) const {
-    Vec finalColor(0);
+    Vec finalColor = XMVectorZero();
 
     for (const Light& light : lights) {
       const Vec correctedHitPoint = intr.p + intr.pN * shadowBias;
@@ -85,7 +85,8 @@ public:
         float lightDirPnAngle = XMVectorGetX(XMVector3Dot(lightDir, intr.pN));
         const float cosineLaw = std::max(0.0f, lightDirPnAngle);
         const float sphereArea = 4.0 * M_PI * sphereRadius * sphereRadius;
-        const Vec colorContribution = Vec(float(light.intensity) / sphereArea * cosineLaw);
+        const float colorComponent = float(light.intensity) / sphereArea * cosineLaw;
+        const Vec colorContribution = XMVectorSet(colorComponent, colorComponent, colorComponent, 0.0f);
         finalColor += colorContribution;
       }
     }
@@ -133,7 +134,7 @@ public:
   }
 
   inline Vec calculateDiffuse(const IntersectionData& intr) const {
-    Vec diffReflColor(0.0f);
+    Vec diffReflColor = XMVectorZero();
     Vec n = intr.material.smoothShading ? intr.pN : intr.pNN;
     std::mt19937 rng(std::random_device{}());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -153,7 +154,7 @@ public:
       // Generate random angle in the XY plane
       float randAngleInXY = M_PI * dist(rng);
       // Construct random vector in the XY plane
-      Vec randVecXY = Vec(cos(randAngleInXY), sin(randAngleInXY), 0);
+      Vec randVecXY = XMVectorSet(cos(randAngleInXY), sin(randAngleInXY), 0.0f, 0.0f);
 
       // Generate random angle in the XZ plane
       float randAngleINXZ = M_PI * 2 * dist(rng);

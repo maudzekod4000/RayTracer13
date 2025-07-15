@@ -152,7 +152,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		}
 	}
 
-	Vec cameraPos(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+	Vec cameraPos = XMVectorSet(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat(), 0.0f);
 
   std::vector<Material> sceneMaterials;
   if (d.HasMember("materials")) {
@@ -377,7 +377,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		}
 
 		Light sceneLight;
-		sceneLight.pos = Vec(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+		sceneLight.pos = XMVectorSet(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat(), 0.0f);
 		
 		const auto& intensity = light[kIntensity];
 
@@ -387,7 +387,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
       const auto& albedo = light[kAlbedo];
 
       if (albedo.IsArray() && albedo.Size() == 3) {
-        sceneLight.albedo = Vec(albedo[0].GetFloat(), albedo[1].GetFloat(), albedo[2].GetFloat());
+        sceneLight.albedo = XMVectorSet(albedo[0].GetFloat(), albedo[1].GetFloat(), albedo[2].GetFloat(), 0.0f);
       }
     }
 

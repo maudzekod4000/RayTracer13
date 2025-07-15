@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <stack>
 #include <iostream>
 
 #include "sampling/Triangle.h"
@@ -39,27 +38,27 @@ struct AABBTree {
 	}
 
 	inline IntersectionData intersectAABBTree(const Ray& ray) const {
-		std::vector<Node> boxStack;
+		std::vector<Node*> boxStack;
 		boxStack.reserve(maxDepth + 1);
 
-		boxStack.push_back(nodes[0]);
+    boxStack.push_back(&nodes[0]);
 		IntersectionData intrsData{};
 
 		while (boxStack.size() > 0) {
-			Node currentBox = boxStack.back(); boxStack.pop_back();
+			Node* currentBox = boxStack.back(); boxStack.pop_back();
 
-			if (currentBox.box.intersect(ray)) {
+			if (currentBox->box.intersect(ray)) {
 				// The ray intersects the box lets move on to its children! :}
-				if (currentBox.isLeaf) {
+				if (currentBox->isLeaf) {
 					// This is a leaf node, let's intersect all the objects in it and update intrsData
-					for (const Triangle& tri : currentBox.triangles) {
+					for (const Triangle& tri : currentBox->triangles) {
 						tri.intersect(ray, intrsData);
 					}
 				}
 				else {
 					// This is not a leaf node. Let's add it's children to the stack
-					boxStack.push_back(nodes[currentBox.child1Idx]);
-					boxStack.push_back(nodes[currentBox.child2Idx]);
+					boxStack.push_back(&nodes[currentBox->child1Idx]);
+					boxStack.push_back(&nodes[currentBox->child2Idx]);
 				}
 			}
 		}
@@ -68,7 +67,7 @@ struct AABBTree {
 	}
 
 private:
-	std::vector<Node> nodes;
+	mutable std::vector<Node> nodes;
 	int32_t leafSize = 1;
 	int32_t maxDepth = 14;
 

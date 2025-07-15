@@ -85,7 +85,7 @@ struct Camera {
     /* Consider the aspect ratio, because pixels might not be square and we added 0.5 to both components. */
     x *= aspectRatio;
 
-    const Vec rayDir(x, y, focalDist);
+    const Vec rayDir = XMVectorSet(x, y, focalDist, 0.0f);
 
     return Ray(pos, XMVector3Normalize(applyTransformation(rayDir)));
 }

@@ -18,11 +18,6 @@ struct Triangle {
 
   inline Triangle() = default;
 
-	/// Calculates the triangle's area.
-	inline float area() const {
-		return MathUtils::area(a.pos, b.pos, c.pos);
-	}
-
 	/// Checks for intersection between the triangle and the ray.
 	/// @param ray Currently traced ray.
 	/// @param intersectionData Holds data from previous intersection and could be updated with a potential new intersection data. Out param.

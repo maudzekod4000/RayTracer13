@@ -1,7 +1,7 @@
 #include "CameraSettings.h"
 
 CameraSettings::CameraSettings(Mat&& tm, Vec&& pos) noexcept :
-	tm(std::move(tm)), pos(std::move(pos))
+	tm(tm), pos(pos)
 {
 }
 
