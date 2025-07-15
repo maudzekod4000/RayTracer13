@@ -26,9 +26,8 @@ struct Triangle {
 		// The projection of the ray direction onto the normal of the triangle
 		// is the length from the ray origin to the traingle plane.
     XMVECTOR originToTriangleVertexA = a.pos - ray.origin;
-    float angleBetweenTriangleAndRay = XMVectorGetX(XMVector3Dot(originToTriangleVertexA, n));
-    float angleBetweenRayDirAndN = XMVectorGetX(XMVector3Dot(ray.dir, n));
-    const float t = angleBetweenTriangleAndRay / angleBetweenRayDirAndN;
+    Vec divideVec = XMVector3Dot(originToTriangleVertexA, n) / XMVector3Dot(ray.dir, n);
+    const float t = XMVectorGetX(divideVec);
 
 		if (t > intersectionData.t || t <= 0.0f) {
 			return false;

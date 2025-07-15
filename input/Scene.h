@@ -5,7 +5,6 @@
 
 #include <vector>
 #include <math.h>
-#include <random>
 #include <algorithm>
 
 #include "sampling/Triangle.h"
@@ -136,8 +135,6 @@ public:
   inline Vec calculateDiffuse(const IntersectionData& intr) const {
     Vec diffReflColor = XMVectorZero();
     Vec n = intr.material.smoothShading ? intr.pN : intr.pNN;
-    std::mt19937 rng(std::random_device{}());
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     for (size_t i = 0; i < giRaysCount; i++) {
       Vec rightAxis = XMVector3Normalize(XMVector3Cross(intr.ray.dir, n));
@@ -152,12 +149,12 @@ public:
       );
 
       // Generate random angle in the XY plane
-      float randAngleInXY = M_PI * dist(rng);
+      float randAngleInXY = M_PI * (rand() / RAND_MAX);
       // Construct random vector in the XY plane
       Vec randVecXY = XMVectorSet(cos(randAngleInXY), sin(randAngleInXY), 0.0f, 0.0f);
 
       // Generate random angle in the XZ plane
-      float randAngleINXZ = M_PI * 2 * dist(rng);
+      float randAngleINXZ = M_PI * 2 * (rand() / RAND_MAX);
       XMMATRIX rotMatY = XMMatrixRotationY(randAngleINXZ);
 
       Vec randVecInXYRotated = XMVector3Transform(randVecXY, rotMatY);
@@ -187,7 +184,7 @@ public:
   const float shadowBias = 0.0055f;
   const float reflectionBias = 0.0001f;
   const float refractionBias = 0.0001f;
-  const int giRaysCount = 1;
+  const int giRaysCount = 4;
   const int giRaysMaxDepth = 2;
   const int cameraRaysMaxDepth = 3;
 
