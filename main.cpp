@@ -21,9 +21,13 @@
 
 constexpr uint16_t MAX_COLOR = 255;
 
-int main() {
+int main(int argc, char** argv) {
+  if (argc < 2) {
+    std::cerr << "arg 1 scene path missing" << std::endl;
+    return -1;
+  }
   // Read the scene file
-  const auto fileContentExp = FileReader::readFile("../scenes/final/scene5.crtscene");
+  const auto fileContentExp = FileReader::readFile(argv[1]);
 
   if (!fileContentExp.has_value()) {
     std::cerr << fileContentExp.error() << std::endl;
