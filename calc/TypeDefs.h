@@ -1,7 +1,8 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include <DirectXMath.h>
+#include <DirectXCollision.h>
 
-typedef glm::vec3 Vec3;
-typedef glm::mat3 Mat3;
-typedef glm::mat4 Mat4;
+using Vec = DirectX::XMVECTOR;
+using Mat = DirectX::XMMATRIX;
+// TODO: Use DirectXMath instead of GLM

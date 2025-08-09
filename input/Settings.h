@@ -1,15 +1,11 @@
-#ifndef SETTINGS_H
-#define SETTINGS_H
+#pragma once
 
 #include "calc/TypeDefs.h"
 
 // General settings that do not fall into any specific category (or at least not yet).
-class Settings {
-public:
-	Settings(Vec3&& backgroundColor);
-private:
-	// The color of the pixel when the ray does not hit anything.
-	Vec3 backgroundColor; // TODO: Use PPMColor for this
-};
+struct Settings {
+	inline Settings(const Vec& backgroundColor): backgroundColor(backgroundColor) {}
 
-#endif // !SETTINGS_H
+	// The color of the pixel when the ray does not hit anything.
+	Vec backgroundColor; // TODO: Use PPMColor for this
+};

@@ -3,11 +3,21 @@
 
 #include "calc/TypeDefs.h"
 
-struct Ray {
-  Ray(const Vec3& origin, Vec3&& dir): origin(origin), dir(std::move(dir)) {}
+enum class RayType {
+  CAMERA,
+  GI
+};
 
-  Vec3 origin;
-  Vec3 dir;
+struct Ray {
+  Ray() = default;
+  Ray(const Vec& origin, const Vec& dir, int bounceCount = 0, RayType type = RayType::CAMERA):
+    origin(origin), dir(dir), bounceCount(bounceCount), type(type) {}
+
+  Vec origin;
+  Vec dir;
+  int bounceCount;
+  int maxBounces;
+  RayType type;
 };
 
 #endif // !RAY_H

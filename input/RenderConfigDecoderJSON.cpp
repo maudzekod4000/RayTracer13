@@ -1,5 +1,6 @@
 #include "RenderConfigDecoderJSON.h"
 
+#include <unordered_map>
 #include <assert.h>
 #include <format>
 
@@ -7,6 +8,8 @@
 #include "rapidjson/error/en.h"
 
 #include "sampling/Vertex.h"
+#include "sampling/Light.h"
+#include "sampling/AABBTree.h"
 
 constexpr char missingInvalidKeyFmt[] = "Missing or invalid type for key '{}'";
 constexpr char sizeMismatchFmt[] = "Unexpected element count of {} when {} is required for key '{}'";
@@ -22,6 +25,18 @@ constexpr char kPos[] = "position";
 constexpr char kObjects[] = "objects";
 constexpr char kVertices[] = "vertices";
 constexpr char kTriangles[] = "triangles";
+constexpr char kLights[] = "lights";
+constexpr char kIntensity[] = "intensity";
+constexpr char kAlbedo[] = "albedo";
+constexpr char kMaterials[] = "materials";
+constexpr char kType[] = "type";
+
+struct ParseTriangle {
+  int v1;
+  int v2;
+  int v3;
+  int matIdx = -1;
+};
 
 std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const uint8_t* data, size_t len)
 {
@@ -29,6 +44,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 	assert(len > 0);
 
 	using namespace rapidjson;
+  using namespace DirectX;
 
 	Document d;
 
@@ -59,7 +75,7 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		return std::unexpected(std::format(sizeMismatchFmt, bgColor.Size(), bgColorSize, kBgColor));
 	}
 
-	Vec3 backgroundColor(bgColor[0].GetFloat(), bgColor[1].GetFloat(), bgColor[2].GetFloat());
+  Vec backgroundColor = XMVectorSet(bgColor[0].GetFloat(), bgColor[1].GetFloat(), bgColor[2].GetFloat(), 0.0f);
 
 	const auto& image = settings[kImage];
 
@@ -102,17 +118,22 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		}
 	}
 
-	Mat3 cameraTm(
+	Mat cameraTm = XMMatrixSet(
 		matrix[0].GetFloat(),
 		matrix[1].GetFloat(),
 		matrix[2].GetFloat(),
+    0.0f,
 		matrix[3].GetFloat(),
 		matrix[4].GetFloat(),
 		matrix[5].GetFloat(),
+    0.0f,
 		matrix[6].GetFloat(),
 		matrix[7].GetFloat(),
-		matrix[8].GetFloat()
+		matrix[8].GetFloat(),
+    0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f
 	);
+  cameraTm = XMMatrixTranspose(cameraTm);
 
 	const auto& pos = camera[kPos];
 
@@ -131,7 +152,51 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 		}
 	}
 
-	Vec3 cameraPos(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+	Vec cameraPos = XMVectorSet(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat(), 0.0f);
+
+  std::vector<Material> sceneMaterials;
+  if (d.HasMember("materials")) {
+    const auto& materials = d[kMaterials];
+
+    if (materials.IsArray()) {
+      for (size_t i = 0; i < materials.Size(); i++) {
+        const auto& material = materials[i].GetObject();
+
+        Material sceneMaterial;
+
+        auto type = material[kType].GetString();
+
+        if (strcmp(type, "diffuse") == 0) {
+          sceneMaterial.type = MaterialType::DIFFUSE;
+        }
+        else if (strcmp(type, "reflective") == 0) {
+          sceneMaterial.type = MaterialType::REFLECTIVE;
+        }
+        else if (strcmp(type, "refractive") == 0) {
+          sceneMaterial.type = MaterialType::REFRACTIVE;
+
+          sceneMaterial.ior = material["ior"].GetFloat();
+        }
+        else {
+          sceneMaterial.type = MaterialType::CONSTANT;
+        }
+
+        auto isSmoothShading = material["smooth_shading"].GetBool();
+
+        sceneMaterial.smoothShading = isSmoothShading;
+
+        sceneMaterial.backFaceCulling = material.HasMember("back_face_culling") ? material["back_face_culling"].GetBool() : false;
+
+        if (material.HasMember(kAlbedo)) {
+          auto albedoVec = material[kAlbedo].GetArray();
+          sceneMaterial.albedo = XMVectorSet(albedoVec[0].GetFloat(), albedoVec[1].GetFloat(), albedoVec[2].GetFloat(), 0.0f);
+        }
+
+        sceneMaterials.push_back(sceneMaterial);
+      }
+    }
+
+  }
 
 	const auto& objects = d[kObjects];
 
@@ -142,10 +207,19 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 	std::vector<Triangle> sceneTriangles;
 
 	for (int objIdx = 0; objIdx < objects.Size(); objIdx++) {
+    std::vector<ParseTriangle> parsedTriangles;
+    std::unordered_map<int, Vertex> idxToVertex;
 		const auto& object = objects.GetArray()[objIdx];
 		if (!object.IsObject()) {
 			return std::unexpected(std::format(missingInvalidKeyFmt, kObjects));
 		}
+
+    // Material for the whole object
+    int materialIdx = -1;
+
+    if (object.HasMember("material_index")) {
+      materialIdx = object["material_index"].GetInt();
+    }
 
 		const auto& vertices = object[kVertices];
 
@@ -161,9 +235,6 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 
 		for (size_t i = 0; i < triangles.Size(); i += 3) {
 			const auto& vertex1Idx = triangles[i];
-			// TODO: Fake red material for now.
-			Material material;
-			material.albedo = Vec3(1, 0, 0);
 
 			if (!vertex1Idx.IsNumber() || vertex1Idx.GetInt() < 0 || vertex1Idx.GetInt() >= vertices.Size()) {
 				return std::unexpected(std::format(invalidValueInArrayFmt, vertex1Idx.GetString(), kTriangles));
@@ -187,7 +258,9 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 				return std::unexpected(std::format(invalidValueInArrayFmt, vertex1z.GetString(), kVertices));
 			}
 
-			Vec3 vertex1Pos{ vertex1x.GetFloat(), vertex1y.GetFloat(), vertex1z.GetFloat() };
+			Vec vertex1Pos{ vertex1x.GetFloat(), vertex1y.GetFloat(), vertex1z.GetFloat() };
+
+      idxToVertex[vertex1Idx.GetInt()] = Vertex(vertex1Pos);
 
 			const auto& vertex2Idx = triangles[i + 1];
 
@@ -213,7 +286,9 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 				return std::unexpected(std::format(invalidValueInArrayFmt, vertex2z.GetString(), kVertices));
 			}
 
-			Vec3 vertex2Pos{ vertex2x.GetFloat(), vertex2y.GetFloat(), vertex2z.GetFloat() };
+			Vec vertex2Pos{ vertex2x.GetFloat(), vertex2y.GetFloat(), vertex2z.GetFloat() };
+
+      idxToVertex[vertex2Idx.GetInt()] = Vertex(vertex2Pos);
 
 			const auto& vertex3Idx = triangles[i + 2];
 
@@ -239,16 +314,91 @@ std::expected<RenderConfig, std::string> RenderConfigDecoderJSON::decode(const u
 				return std::unexpected(std::format(invalidValueInArrayFmt, vertex3z.GetString(), kVertices));
 			}
 
-			Vec3 vertex3Pos{ vertex3x.GetFloat(), vertex3y.GetFloat(), vertex3z.GetFloat() };
+			Vec vertex3Pos{ vertex3x.GetFloat(), vertex3y.GetFloat(), vertex3z.GetFloat() };
 
-			sceneTriangles.emplace_back(Vertex(vertex1Pos), Vertex(vertex2Pos), Vertex(vertex3Pos), std::move(material));
+      idxToVertex[vertex3Idx.GetInt()] = Vertex(vertex3Pos);
+
+      ParseTriangle pt{ vertex1Idx.GetInt(), vertex2Idx.GetInt(), vertex3Idx.GetInt(), materialIdx };
+
+      parsedTriangles.push_back(pt);
 		}
+
+    // Calculate smooth normals.
+    for (const auto& triangle : parsedTriangles) {
+      Vertex& v1 = idxToVertex[triangle.v1];
+      Vertex& v2 = idxToVertex[triangle.v2];
+      Vertex& v3 = idxToVertex[triangle.v3];
+
+      Vec n = XMVector3Normalize(XMVector3Cross(v2.pos - v1.pos, v3.pos - v1.pos));
+
+      v1.normal += n;
+      v1.normal = XMVector3Normalize(v1.normal);
+
+      v2.normal += n;
+      v2.normal = XMVector3Normalize(v2.normal);
+
+      v3.normal += n;
+      v3.normal = XMVector3Normalize(v3.normal);
+    }
+
+    for (const auto& triangle : parsedTriangles) {
+      Vertex& v1 = idxToVertex[triangle.v1];
+      Vertex& v2 = idxToVertex[triangle.v2];
+      Vertex& v3 = idxToVertex[triangle.v3];
+
+      if (triangle.matIdx > -1) {
+		    sceneTriangles.emplace_back(v1, v2, v3, sceneMaterials[triangle.matIdx]);
+      }
+      else {
+        sceneTriangles.emplace_back(v1, v2, v3, Material{});
+      }
+    }
+
+	}
+
+	std::vector<Light> sceneLights;
+
+	const auto& lights = d[kLights];
+
+	if (!lights.IsNull() && !lights.IsArray()) {
+		return std::unexpected(std::format(missingInvalidKeyFmt, kLights));
+	}
+
+	for (int i = 0; i < lights.Size(); i++) {
+		const auto& light = lights.GetArray()[i];
+		if (!light.IsObject()) {
+			return std::unexpected(std::format(missingInvalidKeyFmt, kLights));
+		}
+
+		const auto& pos = light[kPos];
+
+		if (!pos.IsArray() && pos.Size() != 3) {
+			return std::unexpected(std::format(missingInvalidKeyFmt, kLights));
+		}
+
+		Light sceneLight;
+		sceneLight.pos = XMVectorSet(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat(), 0.0f);
+		
+		const auto& intensity = light[kIntensity];
+
+		sceneLight.intensity = intensity.GetInt();
+
+    if (light.HasMember(kAlbedo)) {
+      const auto& albedo = light[kAlbedo];
+
+      if (albedo.IsArray() && albedo.Size() == 3) {
+        sceneLight.albedo = XMVectorSet(albedo[0].GetFloat(), albedo[1].GetFloat(), albedo[2].GetFloat(), 0.0f);
+      }
+    }
+
+		sceneLights.push_back(sceneLight);
 	}
 
 	CameraSettings cs(std::move(cameraTm), std::move(cameraPos));
 	ImageSettings is(uint16_t(imageWidth.GetInt()), uint16_t(imageHeight.GetInt()));
-	Settings s(std::move(backgroundColor));
-	Scene sc(std::move(sceneTriangles));
+	Settings s(backgroundColor);
+  AABBTree octTree(sceneTriangles);  
+	Scene sc(std::move(octTree), std::move(sceneLights), backgroundColor);
 
 	return RenderConfig(std::move(cs), std::move(s), std::move(is), std::move(sc));
 }

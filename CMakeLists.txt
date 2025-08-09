@@ -17,24 +17,20 @@ add_executable(RayTracer13
 	output/ppm/PPMImageWriter.cpp
 	sampling/Ray.h
 	sampling/Camera.h
-	sampling/Camera.cpp
 	sampling/Vertex.h
 	sampling/Triangle.h
-	sampling/Triangle.cpp
 	sampling/Ray.h
 	sampling/IntersectionData.h
-	sampling/Object.h
-	sampling/Object.cpp
 	sampling/Material.h
+  sampling/AABB.h
+  sampling/AABBTree.h
 	input/RenderConfigDecoder.h
 	input/CameraSettings.h
 	input/CameraSettings.cpp
 	input/ImageSettings.h
 	input/ImageSettings.cpp
 	input/Settings.h
-	input/Settings.cpp
 	input/Scene.h
-	input/Scene.cpp
 	input/RenderConfigDecoderJSON.h
 	input/RenderConfigDecoderJSON.cpp
 	input/FileReader.h
@@ -42,6 +38,7 @@ add_executable(RayTracer13
 	input/RenderConfig.h
 	calc/TypeDefs.h
 	calc/MathUtils.h
+	sampling/Light.h
 )
 
 include("${DIR}/lib/rapidjson/rapidjson.cmake")

@@ -1,16 +1,16 @@
 #include "CameraSettings.h"
 
-CameraSettings::CameraSettings(Mat3&& tm, Vec3&& pos) noexcept :
-	tm(std::move(tm)), pos(std::move(pos))
+CameraSettings::CameraSettings(Mat&& tm, Vec&& pos) noexcept :
+	tm(tm), pos(pos)
 {
 }
 
-const Mat3& CameraSettings::getTransform() const noexcept
+const Mat& CameraSettings::getTransform() const noexcept
 {
 	return tm;
 }
 
-const Vec3& CameraSettings::getPos() const noexcept
+const Vec& CameraSettings::getPos() const noexcept
 {
 	return pos;
 }
